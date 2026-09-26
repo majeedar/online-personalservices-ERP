@@ -98,9 +98,13 @@ test('employee records working time and requests travel (Scenarios 3 and 5)', as
   const errors = watchConsole(page);
   await login(page, 'employee');
 
+  // Read button states only after today's state has arrived and been rendered.
+  const todayLoaded = page.waitForResponse((r) => r.url().includes('/api/v1/time/today') && r.ok());
   await nav(page, 'Working Time').click();
-  // Wait until today's state has loaded (the date is rendered) before reading button states.
-  await expect(page.locator('.page-header p')).toHaveText(/\d{4}/);
+  await todayLoaded;
+  await expect(page.getByRole('heading', { name: 'Working time' })).toBeVisible();
+  // Once loaded, exactly the valid next action(s) are enabled (Clock in, End break or Clock out).
+  await expect(page.locator('.clock-buttons button:enabled').first()).toBeVisible();
   const clockIn = page.getByRole('button', { name: 'Clock in' });
   if (await clockIn.isEnabled()) {
     await expect(page.getByRole('button', { name: 'Clock out' })).toBeDisabled();
