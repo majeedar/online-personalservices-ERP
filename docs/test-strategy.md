@@ -7,6 +7,7 @@
 | Integration | Spring Boot test + MockMvc on **real PostgreSQL** (Testcontainers, or embedded when no Docker) | Flyway migrations and seed, repositories, transactions, REST APIs, security, batch jobs, integration error handling | `mvn test` |
 | mock-erp | Spring Boot test | idempotent postings, outages, wire format | `cd mock-erp && mvn test` |
 | Frontend unit | Vitest (Angular unit-test builder) | components and services with `HttpTestingController` | `cd frontend && npm test -- --watch=false` |
+| Translations | Node script | every text passed to `tr` has a German entry; unused entries are listed | `cd frontend && npm run i18n:check` |
 | End-to-end | Playwright (Chromium) | demo scenarios in a real browser against a running stack; fails on console errors; writes the README screenshots | `cd frontend && npx playwright test` |
 
 ## Coverage of AGENT.md §64–67

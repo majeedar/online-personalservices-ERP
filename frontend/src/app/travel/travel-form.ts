@@ -12,18 +12,19 @@ import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { FundingSource, TransportMode, TravelInput } from '../core/api/models';
 import { humanize } from '../core/format';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT', 'BICYCLE', 'OTHER'];
 
 /** New / edit travel request (AGENT.md §43), including split funding (§14.3). */
 @Component({
   selector: 'ops-travel-form',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
+  imports: [I18N_PIPES, ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>{{ id() ? 'Edit travel request' : 'New travel request' }}</h1>
-        <p>The cost centre is checked in the finance system when you submit.</p>
+        <h1>{{ (id() ? 'Edit travel request' : 'New travel request') | tr }}</h1>
+        <p>{{ 'The cost centre is checked in the finance system when you submit.' | tr }}</p>
       </div>
     </header>
     @if (error(); as e) {
@@ -33,29 +34,29 @@ const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT'
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="save(true)" novalidate>
           <mat-form-field appearance="outline" class="full">
-            <mat-label>Purpose</mat-label>
+            <mat-label>{{ 'Purpose' | tr }}</mat-label>
             <input matInput formControlName="purpose" required maxlength="500" />
             @if (form.controls.purpose.invalid) {
-              <mat-error>Describe the purpose of the trip.</mat-error>
+              <mat-error>{{ 'Describe the purpose of the trip.' | tr }}</mat-error>
             }
           </mat-form-field>
           <div class="form-row">
             <mat-form-field appearance="outline">
-              <mat-label>Destination city</mat-label>
+              <mat-label>{{ 'Destination city' | tr }}</mat-label>
               <input matInput formControlName="destinationCity" required />
               @if (form.controls.destinationCity.invalid) {
-                <mat-error>Destination is required.</mat-error>
+                <mat-error>{{ 'Destination is required.' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Country (ISO code)</mat-label>
+              <mat-label>{{ 'Country (ISO code)' | tr }}</mat-label>
               <input matInput formControlName="destinationCountry" required maxlength="2" placeholder="DE" />
               @if (form.controls.destinationCountry.invalid) {
-                <mat-error>Two-letter country code, e.g. DE.</mat-error>
+                <mat-error>{{ 'Two-letter country code, e.g. DE.' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Transport</mat-label>
+              <mat-label>{{ 'Transport' | tr }}</mat-label>
               <mat-select formControlName="transportMode">
                 @for (t of transport; track t) {
                   <mat-option [value]="t">{{ humanize(t) }}</mat-option>
@@ -65,29 +66,29 @@ const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT'
           </div>
           <div class="form-row">
             <mat-form-field appearance="outline">
-              <mat-label>Start</mat-label>
+              <mat-label>{{ 'Start' | tr }}</mat-label>
               <input matInput type="datetime-local" formControlName="start" required />
               @if (form.controls.start.invalid) {
-                <mat-error>Start is required.</mat-error>
+                <mat-error>{{ 'Start is required.' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>End</mat-label>
+              <mat-label>{{ 'End' | tr }}</mat-label>
               <input matInput type="datetime-local" formControlName="end" required />
               @if (form.controls.end.invalid) {
-                <mat-error>End is required.</mat-error>
+                <mat-error>{{ 'End is required.' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Estimated cost</mat-label>
+              <mat-label>{{ 'Estimated cost' | tr }}</mat-label>
               <input matInput type="number" min="0" step="0.01" formControlName="estimatedCost" required />
               <span matTextSuffix>&nbsp;{{ form.controls.currency.value }}</span>
               @if (form.controls.estimatedCost.invalid) {
-                <mat-error>Enter the estimated cost (0 or more).</mat-error>
+                <mat-error>{{ 'Enter the estimated cost (0 or more).' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Currency</mat-label>
+              <mat-label>{{ 'Currency' | tr }}</mat-label>
               <mat-select formControlName="currency">
                 @for (c of currencies; track c) {
                   <mat-option [value]="c">{{ c }}</mat-option>
@@ -97,25 +98,25 @@ const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT'
           </div>
           <div class="form-row">
             <mat-form-field appearance="outline">
-              <mat-label>Cost centre</mat-label>
+              <mat-label>{{ 'Cost centre' | tr }}</mat-label>
               <input matInput formControlName="costCentre" required placeholder="CC-2200" />
               @if (form.controls.costCentre.invalid) {
-                <mat-error>Cost centre is required.</mat-error>
+                <mat-error>{{ 'Cost centre is required.' | tr }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Project code (optional)</mat-label>
+              <mat-label>{{ 'Project code (optional)' | tr }}</mat-label>
               <input matInput formControlName="projectCode" />
             </mat-form-field>
           </div>
 
           <fieldset>
-            <legend>Split funding (optional)</legend>
-            <p class="muted">Give every share as a percentage (total 100) or as an amount.</p>
+            <legend>{{ 'Split funding (optional)' | tr }}</legend>
+            <p class="muted">{{ 'Give every share as a percentage (total 100) or as an amount.' | tr }}</p>
             @for (f of fundings.controls; track $index; let i = $index) {
               <div class="funding" [formGroup]="f">
                 <mat-form-field appearance="outline" class="grow">
-                  <mat-label>Funding source</mat-label>
+                  <mat-label>{{ 'Funding source' | tr }}</mat-label>
                   <mat-select formControlName="fundingSourceId" required>
                     @for (s of sources(); track s.id) {
                       <mat-option [value]="s.id">{{ s.costCentre }} {{ s.projectCode ?? '' }} – {{ s.description }}</mat-option>
@@ -127,27 +128,27 @@ const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT'
                   <input matInput type="number" min="0" max="100" formControlName="percentage" />
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>or amount</mat-label>
+                  <mat-label>{{ 'or amount' | tr }}</mat-label>
                   <input matInput type="number" min="0" formControlName="amount" />
                 </mat-form-field>
-                <button mat-icon-button type="button" (click)="fundings.removeAt(i)" aria-label="Remove funding share"><mat-icon>delete</mat-icon></button>
+                <button mat-icon-button type="button" (click)="fundings.removeAt(i)" [attr.aria-label]="'Remove funding share' | tr"><mat-icon>delete</mat-icon></button>
               </div>
             }
             @if (fundings.length > 0) {
-              <p [class.negative]="percentTotal() !== 0 && percentTotal() !== 100">Percentage total: {{ percentTotal() }} %</p>
+              <p [class.negative]="percentTotal() !== 0 && percentTotal() !== 100">{{ 'Percentage total: {total} %' | tr: { total: percentTotal() } }}</p>
             }
-            <button mat-stroked-button type="button" (click)="addFunding()"><mat-icon>add</mat-icon> Add funding share</button>
+            <button mat-stroked-button type="button" (click)="addFunding()"><mat-icon>add</mat-icon> {{ 'Add funding share' | tr }}</button>
           </fieldset>
 
           <mat-form-field appearance="outline" class="full">
-            <mat-label>Comment (optional)</mat-label>
+            <mat-label>{{ 'Comment (optional)' | tr }}</mat-label>
             <textarea matInput formControlName="comment" rows="2" maxlength="1000"></textarea>
           </mat-form-field>
 
           <div class="actions">
-            <button mat-flat-button type="submit" [disabled]="saving()">Save and submit</button>
-            <button mat-stroked-button type="button" (click)="save(false)" [disabled]="saving()">Save draft</button>
-            <a mat-button [routerLink]="id() ? ['/travel', id()] : '/travel'">Cancel</a>
+            <button mat-flat-button type="submit" [disabled]="saving()">{{ 'Save and submit' | tr }}</button>
+            <button mat-stroked-button type="button" (click)="save(false)" [disabled]="saving()">{{ 'Save draft' | tr }}</button>
+            <a mat-button [routerLink]="id() ? ['/travel', id()] : '/travel'">{{ 'Cancel' | tr }}</a>
           </div>
         </form>
       </mat-card-content>

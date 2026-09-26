@@ -1,4 +1,3 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +16,8 @@ import { humanize } from '../core/format';
 import { askDecision } from '../shared/decision-dialog';
 import { StatusChip } from '../shared/status-chip';
 import { WorkflowTimeline } from '../shared/workflow-timeline';
+import { tr } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL_TRANSPORT', 'MILEAGE', 'MEALS', 'CONFERENCE_FEE', 'OTHER'];
 
@@ -24,8 +25,7 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
 @Component({
   selector: 'ops-travel-detail',
   imports: [
-    CurrencyPipe,
-    DatePipe,
+    I18N_PIPES,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -40,7 +40,7 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
   ],
   template: `
     @if (loading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert"><mat-icon aria-hidden="true">error</mat-icon> {{ e }}</p>
@@ -48,7 +48,7 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
     @if (trip(); as t) {
       <header class="page-header">
         <div>
-          <h1>{{ t.destinationCity }} ({{ t.destinationCountry }}) · {{ t.startDateTime | date: 'mediumDate' }}</h1>
+          <h1>{{ t.destinationCity }} ({{ t.destinationCountry }}) · {{ t.startDateTime | ldate: 'mediumDate' }}</h1>
           <p>{{ t.employeeName }} · {{ t.purpose }} · <ops-status [status]="t.status" /></p>
         </div>
         <div class="actions">
@@ -56,53 +56,53 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
             <button mat-flat-button type="button" (click)="decide()" [disabled]="busy()">
               <mat-icon>check</mat-icon> {{ decisionLabel(t.actions.decisionStep) }}
             </button>
-            <button mat-stroked-button type="button" (click)="reject('return')" [disabled]="busy()">Return</button>
+            <button mat-stroked-button type="button" (click)="reject('return')" [disabled]="busy()">{{ 'Return' | tr }}</button>
             @if (t.actions.decisionStep !== 'TRAVEL_OFFICE_REVIEW') {
-              <button mat-stroked-button type="button" (click)="reject('reject')" [disabled]="busy()">Reject</button>
+              <button mat-stroked-button type="button" (click)="reject('reject')" [disabled]="busy()">{{ 'Reject' | tr }}</button>
             }
           }
           @if (t.actions.edit) {
-            <a mat-stroked-button [routerLink]="['/travel', t.id, 'edit']"><mat-icon>edit</mat-icon> Edit</a>
+            <a mat-stroked-button [routerLink]="['/travel', t.id, 'edit']"><mat-icon>edit</mat-icon> {{ 'Edit' | tr }}</a>
           }
           @if (t.actions.submit) {
-            <button mat-flat-button type="button" (click)="act('submit')" [disabled]="busy()">Submit</button>
+            <button mat-flat-button type="button" (click)="act('submit')" [disabled]="busy()">{{ 'Submit' | tr }}</button>
           }
           @if (t.actions.markCompleted) {
-            <button mat-flat-button type="button" (click)="act('mark-completed')" [disabled]="busy()">Mark trip completed</button>
+            <button mat-flat-button type="button" (click)="act('mark-completed')" [disabled]="busy()">{{ 'Mark trip completed' | tr }}</button>
           }
           @if (t.actions.submitExpenses) {
-            <button mat-flat-button type="button" (click)="act('submit-expenses')" [disabled]="busy()">Submit expense claim</button>
+            <button mat-flat-button type="button" (click)="act('submit-expenses')" [disabled]="busy()">{{ 'Submit expense claim' | tr }}</button>
           }
           @if (t.actions.cancel) {
-            <button mat-button type="button" (click)="cancel()" [disabled]="busy()">Cancel trip</button>
+            <button mat-button type="button" (click)="cancel()" [disabled]="busy()">{{ 'Cancel trip' | tr }}</button>
           }
         </div>
       </header>
 
       <div class="grid-2">
         <mat-card appearance="outlined">
-          <mat-card-header><mat-card-title><h2>Trip</h2></mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title><h2>{{ 'Trip' | tr }}</h2></mat-card-title></mat-card-header>
           <mat-card-content>
             <dl class="dl">
-              <dt>Dates</dt><dd>{{ t.startDateTime | date: 'medium' }} – {{ t.endDateTime | date: 'medium' }}</dd>
-              <dt>Transport</dt><dd>{{ humanize(t.transportMode) }}</dd>
-              <dt>Estimated cost</dt><dd>{{ t.estimatedCost | currency: t.currency }}</dd>
-              <dt>Cost centre</dt><dd>{{ t.costCentre }} {{ t.projectCode ?? '' }}</dd>
+              <dt>{{ 'Dates' | tr }}</dt><dd>{{ t.startDateTime | ldate: 'medium' }} – {{ t.endDateTime | ldate: 'medium' }}</dd>
+              <dt>{{ 'Transport' | tr }}</dt><dd>{{ humanize(t.transportMode) }}</dd>
+              <dt>{{ 'Estimated cost' | tr }}</dt><dd>{{ t.estimatedCost | lcurrency: t.currency }}</dd>
+              <dt>{{ 'Cost centre' | tr }}</dt><dd>{{ t.costCentre }} {{ t.projectCode ?? '' }}</dd>
               @for (f of t.fundings; track $index) {
-                <dt>Funding</dt>
-                <dd>{{ f.source?.costCentre }} {{ f.source?.projectCode ?? '' }}: {{ f.percentage !== null && f.percentage !== undefined ? f.percentage + ' %' : (f.amount | currency: t.currency) }}</dd>
+                <dt>{{ 'Funding' | tr }}</dt>
+                <dd>{{ f.source?.costCentre }} {{ f.source?.projectCode ?? '' }}: {{ f.percentage !== null && f.percentage !== undefined ? f.percentage + ' %' : (f.amount | lcurrency: t.currency) }}</dd>
               }
-              <dt>Travel ERP no.</dt><dd>{{ t.externalTravelReference ?? '—' }}</dd>
+              <dt>{{ 'Travel ERP no.' | tr }}</dt><dd>{{ t.externalTravelReference ?? '—' }}</dd>
               @if (t.settledAmount !== null && t.settledAmount !== undefined) {
-                <dt>Settled</dt><dd>{{ t.settledAmount | currency: t.currency }}</dd>
-                <dt>Settlement no.</dt><dd>{{ t.settlementReference ?? 'pending' }}</dd>
-                <dt>Finance document</dt><dd>{{ t.financePostingReference ?? 'pending' }}</dd>
+                <dt>{{ 'Settled' | tr }}</dt><dd>{{ t.settledAmount | lcurrency: t.currency }}</dd>
+                <dt>{{ 'Settlement no.' | tr }}</dt><dd>{{ t.settlementReference ?? ('pending' | tr) }}</dd>
+                <dt>{{ 'Finance document' | tr }}</dt><dd>{{ t.financePostingReference ?? ('pending' | tr) }}</dd>
               }
             </dl>
             @if (t.exports.length) {
-              <h3>Exports to university systems</h3>
+              <h3>{{ 'Exports to university systems' | tr }}</h3>
               <table class="data">
-                <thead><tr><th scope="col">Export</th><th scope="col">Status</th><th scope="col" class="num">Attempts</th></tr></thead>
+                <thead><tr><th scope="col">{{ 'Export' | tr }}</th><th scope="col">{{ 'Status' | tr }}</th><th scope="col" class="num">{{ 'Attempts' | tr }}</th></tr></thead>
                 <tbody>
                   @for (x of t.exports; track x.type) {
                     <tr>
@@ -117,50 +117,50 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
           </mat-card-content>
         </mat-card>
         <mat-card appearance="outlined">
-          <mat-card-header><mat-card-title><h2>Approval</h2></mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title><h2>{{ 'Approval' | tr }}</h2></mat-card-title></mat-card-header>
           <mat-card-content><ops-workflow-timeline [history]="t.history" /></mat-card-content>
         </mat-card>
       </div>
 
       @if (t.expenses.length || t.actions.editExpenses) {
         <mat-card appearance="outlined">
-          <mat-card-header><mat-card-title><h2>Expenses</h2></mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title><h2>{{ 'Expenses' | tr }}</h2></mat-card-title></mat-card-header>
           <mat-card-content>
             <table class="data">
               <thead>
-                <tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col" class="num">Amount</th><th scope="col">Receipt</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                <tr><th scope="col">{{ 'Date' | tr }}</th><th scope="col">{{ 'Type' | tr }}</th><th scope="col">{{ 'Description' | tr }}</th><th scope="col" class="num">{{ 'Amount' | tr }}</th><th scope="col">{{ 'Receipt' | tr }}</th><th scope="col"><span class="sr-only">{{ 'Actions' | tr }}</span></th></tr>
               </thead>
               <tbody>
                 @for (x of t.expenses; track x.id) {
                   <tr>
-                    <td>{{ x.expenseDate | date: 'mediumDate' }}</td>
+                    <td>{{ x.expenseDate | ldate: 'mediumDate' }}</td>
                     <td>{{ humanize(x.expenseType) }}</td>
                     <td>{{ x.description }}</td>
-                    <td class="num">{{ x.amount | currency: x.currency }}</td>
+                    <td class="num">{{ x.amount | lcurrency: x.currency }}</td>
                     <td>
                       @if (x.receiptDocumentId) {
                         <a [href]="'/api/v1/travel/' + t.id + '/documents/' + x.receiptDocumentId">{{ x.receiptFileName }}</a>
                       } @else if (t.actions.editExpenses) {
-                        <label class="upload">Upload <input type="file" accept="application/pdf,image/png,image/jpeg" (change)="upload(x.id, $event)" /></label>
+                        <label class="upload">{{ 'Upload' | tr }} <input type="file" accept="application/pdf,image/png,image/jpeg" (change)="upload(x.id, $event)" /></label>
                       } @else {
                         —
                       }
                     </td>
                     <td>
                       @if (t.actions.editExpenses) {
-                        <button mat-icon-button type="button" (click)="removeExpense(x.id)" aria-label="Remove expense"><mat-icon>delete</mat-icon></button>
+                        <button mat-icon-button type="button" (click)="removeExpense(x.id)" [attr.aria-label]="'Remove expense' | tr"><mat-icon>delete</mat-icon></button>
                       }
                     </td>
                   </tr>
                 }
               </tbody>
-              <tfoot><tr><th scope="row" colspan="3">Total</th><td class="num">{{ t.expenseTotal | currency: t.currency }}</td><td colspan="2"></td></tr></tfoot>
+              <tfoot><tr><th scope="row" colspan="3">{{ 'Total' | tr }}</th><td class="num">{{ t.expenseTotal | lcurrency: t.currency }}</td><td colspan="2"></td></tr></tfoot>
             </table>
 
             @if (t.actions.editExpenses) {
               <form [formGroup]="expense" (ngSubmit)="addExpense()" class="expense-form" novalidate>
                 <mat-form-field appearance="outline">
-                  <mat-label>Type</mat-label>
+                  <mat-label>{{ 'Type' | tr }}</mat-label>
                   <mat-select formControlName="expenseType">
                     @for (e of expenseTypes; track e) {
                       <mat-option [value]="e">{{ humanize(e) }}</mat-option>
@@ -168,20 +168,20 @@ const EXPENSE_TYPES: ExpenseType[] = ['TRAIN', 'FLIGHT', 'HOTEL', 'TAXI', 'LOCAL
                   </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Date</mat-label>
+                  <mat-label>{{ 'Date' | tr }}</mat-label>
                   <input matInput type="date" formControlName="expenseDate" required />
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Amount ({{ t.currency }})</mat-label>
+                  <mat-label>{{ 'Amount' | tr }} ({{ t.currency }})</mat-label>
                   <input matInput type="number" min="0.01" step="0.01" formControlName="amount" required />
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="grow">
-                  <mat-label>Description</mat-label>
+                  <mat-label>{{ 'Description' | tr }}</mat-label>
                   <input matInput formControlName="description" />
                 </mat-form-field>
-                <button mat-stroked-button type="submit"><mat-icon>add</mat-icon> Add expense</button>
+                <button mat-stroked-button type="submit"><mat-icon>add</mat-icon> {{ 'Add expense' | tr }}</button>
               </form>
-              <p class="muted">Receipts are required for train, flight, hotel, taxi and conference fees.</p>
+              <p class="muted">{{ 'Receipts are required for train, flight, hotel, taxi and conference fees.' | tr }}</p>
             }
           </mat-card-content>
         </mat-card>
@@ -238,7 +238,7 @@ export class TravelDetail implements OnInit {
   }
 
   protected decisionLabel(step?: string): string {
-    return step === 'FINANCIAL_APPROVAL' ? 'Financial approval' : step === 'TRAVEL_OFFICE_REVIEW' ? 'Accept and settle' : 'Approve';
+    return tr(step === 'FINANCIAL_APPROVAL' ? 'Financial approval' : step === 'TRAVEL_OFFICE_REVIEW' ? 'Accept and settle' : 'Approve');
   }
 
   protected act(action: 'submit' | 'mark-completed' | 'submit-expenses'): Promise<void> {
@@ -250,7 +250,7 @@ export class TravelDetail implements OnInit {
     const action = step === 'FINANCIAL_APPROVAL' ? 'financial-approve' : step === 'TRAVEL_OFFICE_REVIEW' ? 'settle' : 'approve';
     const result = await askDecision(this.dialog, {
       title: `${this.decisionLabel(step)}?`,
-      message: step === 'TRAVEL_OFFICE_REVIEW' ? 'The settlement is exported to the travel ERP and posted in finance.' : undefined,
+      message: step === 'TRAVEL_OFFICE_REVIEW' ? tr('The settlement is exported to the travel ERP and posted in finance.') : undefined,
       confirmLabel: this.decisionLabel(step),
       commentRequired: false,
     });
@@ -261,8 +261,8 @@ export class TravelDetail implements OnInit {
 
   protected async reject(action: 'reject' | 'return'): Promise<void> {
     const result = await askDecision(this.dialog, {
-      title: action === 'reject' ? 'Reject this trip?' : 'Return for correction?',
-      confirmLabel: action === 'reject' ? 'Reject' : 'Return',
+      title: tr(action === 'reject' ? 'Reject this trip?' : 'Return for correction?'),
+      confirmLabel: tr(action === 'reject' ? 'Reject' : 'Return'),
       commentRequired: true,
       destructive: action === 'reject',
     });
@@ -272,7 +272,7 @@ export class TravelDetail implements OnInit {
   }
 
   protected async cancel(): Promise<void> {
-    const result = await askDecision(this.dialog, { title: 'Cancel this trip?', confirmLabel: 'Cancel trip', commentRequired: false, destructive: true });
+    const result = await askDecision(this.dialog, { title: tr('Cancel this trip?'), confirmLabel: tr('Cancel trip'), commentRequired: false, destructive: true });
     if (result) {
       await this.run(() => this.api.tripAction(this.id(), 'cancel'));
     }

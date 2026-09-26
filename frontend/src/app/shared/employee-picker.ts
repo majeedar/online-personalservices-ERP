@@ -6,6 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Api } from '../core/api/api.service';
 import { EmployeeSearchResult, PersonRef } from '../core/api/models';
+import { marker } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /**
  * Staff directory search (name and unit only). Writes the selected employee's ID
@@ -13,16 +15,16 @@ import { EmployeeSearchResult, PersonRef } from '../core/api/models';
  */
 @Component({
   selector: 'ops-employee-picker',
-  imports: [ReactiveFormsModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
+  imports: [I18N_PIPES, ReactiveFormsModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
   template: `
     <mat-form-field appearance="outline" class="full">
-      <mat-label>{{ label() }}</mat-label>
+      <mat-label>{{ label() | tr }}</mat-label>
       <input
         matInput
         [formControl]="search"
         [matAutocomplete]="auto"
         autocomplete="off"
-        placeholder="Type at least 2 letters"
+        [placeholder]="'Type at least 2 letters' | tr"
       />
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="display" (optionSelected)="select($event.option.value)">
         @for (e of results(); track e.id) {
@@ -42,7 +44,7 @@ export class EmployeePicker implements OnInit {
   private readonly api = inject(Api);
 
   readonly control = input.required<FormControl<string | null>>();
-  readonly label = input('Employee');
+  readonly label = input<string>(marker('Employee'));
   readonly hint = input<string>();
   readonly initial = input<PersonRef | undefined>();
 

@@ -1,9 +1,8 @@
-import { DatePipe } from '@angular/common';
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { DateAdapter, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,10 +11,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime } from 'rxjs';
 import { Api } from '../core/api/api.service';
-import { describeError } from '../core/api/api-error';
+import { describeError, serverMessage } from '../core/api/api-error';
 import { AbsenceInput, AbsencePreview, DayPart, LeaveType, PersonRef } from '../core/api/models';
 import { formatDays, formatMinutes, halfDaySuffix, humanize, isoDate, parseIsoDate } from '../core/format';
 import { EmployeePicker } from '../shared/employee-picker';
+import { locale } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /**
  * New / edit absence request (AGENT.md §42). The server calculates the days and
@@ -24,7 +25,7 @@ import { EmployeePicker } from '../shared/employee-picker';
 @Component({
   selector: 'ops-absence-form',
   imports: [
-    DatePipe,
+    I18N_PIPES,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -40,8 +41,8 @@ import { EmployeePicker } from '../shared/employee-picker';
   template: `
     <header class="page-header">
       <div>
-        <h1>{{ id() ? 'Edit absence request' : 'New absence request' }}</h1>
-        <p>Days are calculated from your work schedule and the public-holiday calendar.</p>
+        <h1>{{ (id() ? 'Edit absence request' : 'New absence request') | tr }}</h1>
+        <p>{{ 'Days are calculated from your work schedule and the public-holiday calendar.' | tr }}</p>
       </div>
     </header>
 
@@ -54,7 +55,7 @@ import { EmployeePicker } from '../shared/employee-picker';
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="save(true)" novalidate>
             <mat-form-field appearance="outline" class="full">
-              <mat-label>Leave type</mat-label>
+              <mat-label>{{ 'Leave type' | tr }}</mat-label>
               <mat-select formControlName="leaveTypeId" required>
                 @for (t of leaveTypes(); track t.id) {
                   <mat-option [value]="t.id">{{ t.name }}</mat-option>
@@ -62,51 +63,51 @@ import { EmployeePicker } from '../shared/employee-picker';
               </mat-select>
               @if (selectedType(); as t) {
                 <mat-hint>
-                  {{ t.deductsEntitlement ? 'Deducted from your entitlement.' : 'Not deducted from your entitlement.' }}
-                  {{ t.requiresApproval ? 'Needs approval.' : 'Takes effect immediately.' }}
+                  {{ (t.deductsEntitlement ? 'Deducted from your entitlement.' : 'Not deducted from your entitlement.') | tr }}
+                  {{ (t.requiresApproval ? 'Needs approval.' : 'Takes effect immediately.') | tr }}
                 </mat-hint>
               }
               @if (form.controls.leaveTypeId.hasError('required')) {
-                <mat-error>Choose a leave type.</mat-error>
+                <mat-error>{{ 'Choose a leave type.' | tr }}</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full">
-              <mat-label>Period</mat-label>
+              <mat-label>{{ 'Period' | tr }}</mat-label>
               <mat-date-range-input [rangePicker]="picker">
-                <input matStartDate formControlName="start" placeholder="Start date" required />
-                <input matEndDate formControlName="end" placeholder="End date" required />
+                <input matStartDate formControlName="start" [placeholder]="'Start date' | tr" required />
+                <input matEndDate formControlName="end" [placeholder]="'End date' | tr" required />
               </mat-date-range-input>
               <mat-datepicker-toggle matIconSuffix [for]="picker" />
               <mat-date-range-picker #picker />
               @if (form.controls.start.invalid || form.controls.end.invalid) {
-                <mat-error>Choose a start and end date.</mat-error>
+                <mat-error>{{ 'Choose a start and end date.' | tr }}</mat-error>
               }
             </mat-form-field>
 
             @if (singleDay()) {
               <mat-form-field appearance="outline" class="full">
-                <mat-label>Day</mat-label>
+                <mat-label>{{ 'Day' | tr }}</mat-label>
                 <mat-select formControlName="startPart">
-                  <mat-option value="FULL">Full day</mat-option>
-                  <mat-option value="MORNING">Morning (half day)</mat-option>
-                  <mat-option value="AFTERNOON">Afternoon (half day)</mat-option>
+                  <mat-option value="FULL">{{ 'Full day' | tr }}</mat-option>
+                  <mat-option value="MORNING">{{ 'Morning (half day)' | tr }}</mat-option>
+                  <mat-option value="AFTERNOON">{{ 'Afternoon (half day)' | tr }}</mat-option>
                 </mat-select>
               </mat-form-field>
             } @else if (form.controls.start.value && form.controls.end.value) {
               <div class="parts">
                 <mat-form-field appearance="outline">
-                  <mat-label>First day</mat-label>
+                  <mat-label>{{ 'First day' | tr }}</mat-label>
                   <mat-select formControlName="startPart">
-                    <mat-option value="FULL">Full day</mat-option>
-                    <mat-option value="AFTERNOON">From noon (half day)</mat-option>
+                    <mat-option value="FULL">{{ 'Full day' | tr }}</mat-option>
+                    <mat-option value="AFTERNOON">{{ 'From noon (half day)' | tr }}</mat-option>
                   </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Last day</mat-label>
+                  <mat-label>{{ 'Last day' | tr }}</mat-label>
                   <mat-select formControlName="endPart">
-                    <mat-option value="FULL">Full day</mat-option>
-                    <mat-option value="MORNING">Until noon (half day)</mat-option>
+                    <mat-option value="FULL">{{ 'Full day' | tr }}</mat-option>
+                    <mat-option value="MORNING">{{ 'Until noon (half day)' | tr }}</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
@@ -116,51 +117,51 @@ import { EmployeePicker } from '../shared/employee-picker';
               <ops-employee-picker
                 [control]="representative"
                 [initial]="initialRepresentative()"
-                label="Representative (optional)"
-                hint="Who covers for you while you are away"
+                [label]="'Representative (optional)' | tr"
+                [hint]="'Who covers for you while you are away' | tr"
               />
             }
 
             <mat-form-field appearance="outline" class="full">
-              <mat-label>Comment (optional)</mat-label>
+              <mat-label>{{ 'Comment (optional)' | tr }}</mat-label>
               <textarea matInput formControlName="comment" rows="3" maxlength="1000"></textarea>
             </mat-form-field>
 
             <div class="actions">
-              <button mat-flat-button type="submit" [disabled]="saving()">Save and submit</button>
-              <button mat-stroked-button type="button" (click)="save(false)" [disabled]="saving()">Save draft</button>
-              <a mat-button [routerLink]="id() ? ['/absence', id()] : '/absence'">Cancel</a>
+              <button mat-flat-button type="submit" [disabled]="saving()">{{ 'Save and submit' | tr }}</button>
+              <button mat-stroked-button type="button" (click)="save(false)" [disabled]="saving()">{{ 'Save draft' | tr }}</button>
+              <a mat-button [routerLink]="id() ? ['/absence', id()] : '/absence'">{{ 'Cancel' | tr }}</a>
             </div>
           </form>
         </mat-card-content>
       </mat-card>
 
       <mat-card appearance="outlined" aria-live="polite">
-        <mat-card-header><mat-card-title><h2>Calculation</h2></mat-card-title></mat-card-header>
+        <mat-card-header><mat-card-title><h2>{{ 'Calculation' | tr }}</h2></mat-card-title></mat-card-header>
         <mat-card-content>
           @if (preview(); as p) {
             <dl class="figures">
-              <dt>Calculated working days</dt>
+              <dt>{{ 'Calculated working days' | tr }}</dt>
               <dd>{{ p.workingDays }}</dd>
               @if (p.currentBalance !== null && p.currentBalance !== undefined) {
-                <dt>Current balance</dt>
+                <dt>{{ 'Current balance' | tr }}</dt>
                 <dd>{{ formatDays(p.currentBalance) }}</dd>
-                <dt>Projected balance</dt>
+                <dt>{{ 'Projected balance' | tr }}</dt>
                 <dd [class.negative]="(p.projectedBalance ?? 0) < 0">{{ formatDays(p.projectedBalance) }}</dd>
               }
             </dl>
             @for (issue of p.issues; track issue.code) {
-              <p class="error-banner" role="status"><mat-icon aria-hidden="true">warning</mat-icon> {{ issue.message }}</p>
+              <p class="error-banner" role="status"><mat-icon aria-hidden="true">warning</mat-icon> {{ serverMessage(issue.code, issue.message) }}</p>
             }
             <table class="data">
-              <caption>Days in the period</caption>
+              <caption>{{ 'Days in the period' | tr }}</caption>
               <thead>
-                <tr><th scope="col">Date</th><th scope="col">Counts as</th><th scope="col" class="num">Planned</th></tr>
+                <tr><th scope="col">{{ 'Date' | tr }}</th><th scope="col">{{ 'Counts as' | tr }}</th><th scope="col" class="num">{{ 'Planned' | tr }}</th></tr>
               </thead>
               <tbody>
                 @for (d of p.days; track d.date) {
                   <tr [class.off]="d.kind !== 'WORKING_DAY'">
-                    <th scope="row">{{ d.date | date: 'EEE, d MMM' }}</th>
+                    <th scope="row">{{ d.date | ldate: 'EEE, d MMM' }}</th>
                     <td>{{ humanize(d.kind) }}{{ halfDaySuffix(d.dayPart) }}</td>
                     <td class="num">{{ d.plannedMinutes ? formatMinutes(d.plannedMinutes) : '—' }}</td>
                   </tr>
@@ -168,7 +169,7 @@ import { EmployeePicker } from '../shared/employee-picker';
               </tbody>
             </table>
           } @else {
-            <p class="muted">Choose a leave type and a period to see the calculation.</p>
+            <p class="muted">{{ 'Choose a leave type and a period to see the calculation.' | tr }}</p>
           }
         </mat-card-content>
       </mat-card>
@@ -184,6 +185,12 @@ import { EmployeePicker } from '../shared/employee-picker';
 export class AbsenceForm implements OnInit {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly dateAdapter = inject(DateAdapter<Date>);
+
+  constructor() {
+    // Date picker labels and input format follow the interface language (ADR-019).
+    effect(() => this.dateAdapter.setLocale(locale()));
+  }
 
   /** Route parameter (edit mode). */
   readonly id = input<string>();
@@ -199,6 +206,7 @@ export class AbsenceForm implements OnInit {
   protected readonly formatMinutes = formatMinutes;
   protected readonly humanize = humanize;
   protected readonly halfDaySuffix = halfDaySuffix;
+  protected readonly serverMessage = serverMessage;
 
   protected readonly form = inject(FormBuilder).group({
     leaveTypeId: ['', Validators.required],

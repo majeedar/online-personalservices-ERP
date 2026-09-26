@@ -161,3 +161,26 @@ test('HR admin runs a report', async ({ page }) => {
   await page.screenshot({ path: `${SHOTS}/reports.png`, fullPage: true });
   expect(errors).toEqual([]);
 });
+
+test('interface switches between English and German (ADR-019)', async ({ page }) => {
+  const errors = watchConsole(page);
+  await login(page, 'employee');
+  await page.getByRole('button', { name: /Language: English/ }).click();
+  await page.getByRole('menuitem', { name: 'Deutsch' }).click();
+
+  const mainNav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await expect(mainNav.getByRole('link', { name: 'Arbeitszeit', exact: true })).toBeVisible();
+  await expect(page).toHaveTitle(/Übersicht/);
+  await mainNav.getByRole('link', { name: 'Abwesenheit', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Abwesenheit', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Urlaubskonto' })).toBeVisible();
+  await page.screenshot({ path: `${SHOTS}/absence-german.png`, fullPage: true });
+
+  // The choice survives a reload; switching back restores English.
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Abwesenheit', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Sprache: Deutsch/ }).click();
+  await page.getByRole('menuitem', { name: 'English' }).click();
+  await expect(page.getByRole('heading', { name: 'Absence', exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});

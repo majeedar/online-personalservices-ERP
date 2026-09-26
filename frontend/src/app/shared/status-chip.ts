@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { humanize } from '../core/format';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 type Tone = 'draft' | 'pending' | 'approved' | 'rejected' | 'failed' | 'completed' | 'inactive';
 
@@ -37,7 +38,7 @@ const TONES: Record<string, { tone: Tone; icon: string }> = {
 /** Status as icon + text + colour; never colour alone (AGENT.md §89). */
 @Component({
   selector: 'ops-status',
-  imports: [MatIconModule],
+  imports: [I18N_PIPES, MatIconModule],
   template: `<span class="status status-{{ style().tone }}">
     <mat-icon aria-hidden="true">{{ style().icon }}</mat-icon>{{ label() ?? text() }}
   </span>`,

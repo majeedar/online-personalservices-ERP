@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,11 +10,13 @@ import { humanize } from '../core/format';
 import { askDecision } from '../shared/decision-dialog';
 import { StatusChip } from '../shared/status-chip';
 import { WorkflowTimeline } from '../shared/workflow-timeline';
+import { tr } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** A time correction, for the employee and for the approving supervisor / time admin. */
 @Component({
   selector: 'ops-correction-detail',
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, StatusChip, WorkflowTimeline],
+  imports: [I18N_PIPES, MatButtonModule, MatCardModule, MatIconModule, StatusChip, WorkflowTimeline],
   template: `
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
@@ -23,32 +24,32 @@ import { WorkflowTimeline } from '../shared/workflow-timeline';
     @if (correction(); as c) {
       <header class="page-header">
         <div>
-          <h1>Time correction · {{ c.date | date: 'fullDate' }}</h1>
+          <h1>{{ 'Time correction' | tr }} · {{ c.date | ldate: 'fullDate' }}</h1>
           <p><ops-status [status]="c.status" /></p>
         </div>
         @if (c.actionableTaskId) {
           <div class="actions">
-            <button mat-flat-button type="button" (click)="decide('approve')" [disabled]="busy()"><mat-icon>check</mat-icon> Approve and apply</button>
-            <button mat-stroked-button type="button" (click)="decide('reject')" [disabled]="busy()">Reject</button>
+            <button mat-flat-button type="button" (click)="decide('approve')" [disabled]="busy()"><mat-icon>check</mat-icon> {{ 'Approve and apply' | tr }}</button>
+            <button mat-stroked-button type="button" (click)="decide('reject')" [disabled]="busy()">{{ 'Reject' | tr }}</button>
           </div>
         }
       </header>
       <div class="grid-2">
         <mat-card appearance="outlined">
-          <mat-card-header><mat-card-title><h2>Requested change</h2></mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title><h2>{{ 'Requested change' | tr }}</h2></mat-card-title></mat-card-header>
           <mat-card-content>
             <dl class="dl">
-              <dt>Correction</dt><dd>{{ humanize(c.operation) }}</dd>
+              <dt>{{ 'Correction' | tr }}</dt><dd>{{ humanize(c.operation) }}</dd>
               @if (c.requestedType) {
-                <dt>Entry</dt><dd>{{ humanize(c.requestedType) }} at {{ c.requestedTimestamp | date: 'HH:mm' }}</dd>
+                <dt>{{ 'Entry' | tr }}</dt><dd>{{ '{type} at {time}' | tr: { type: humanize(c.requestedType), time: c.requestedTimestamp | ldate: 'HH:mm' } }}</dd>
               }
-              <dt>Reason</dt><dd>{{ c.reason }}</dd>
-              <dt>Requested</dt><dd>{{ c.createdAt | date: 'medium' }}</dd>
+              <dt>{{ 'Reason' | tr }}</dt><dd>{{ c.reason }}</dd>
+              <dt>{{ 'Requested' | tr }}</dt><dd>{{ c.createdAt | ldate: 'medium' }}</dd>
             </dl>
           </mat-card-content>
         </mat-card>
         <mat-card appearance="outlined">
-          <mat-card-header><mat-card-title><h2>Approval</h2></mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title><h2>{{ 'Approval' | tr }}</h2></mat-card-title></mat-card-header>
           <mat-card-content><ops-workflow-timeline [history]="c.history" /></mat-card-content>
         </mat-card>
       </div>
@@ -80,8 +81,8 @@ export class CorrectionDetail implements OnInit {
 
   protected async decide(action: 'approve' | 'reject'): Promise<void> {
     const result = await askDecision(this.dialog, {
-      title: action === 'approve' ? 'Approve and apply this correction?' : 'Reject this correction?',
-      confirmLabel: action === 'approve' ? 'Approve' : 'Reject',
+      title: tr(action === 'approve' ? 'Approve and apply this correction?' : 'Reject this correction?'),
+      confirmLabel: tr(action === 'approve' ? 'Approve' : 'Reject'),
       commentRequired: action === 'reject',
       destructive: action === 'reject',
     });

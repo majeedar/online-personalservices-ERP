@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angu
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { firstValueFrom } from 'rxjs';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 export interface DecisionDialogData {
   title: string;
@@ -17,7 +18,7 @@ export interface DecisionDialogData {
 /** Confirmation with an optional or required comment (reason for rejecting/returning). */
 @Component({
   selector: 'ops-decision-dialog',
-  imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule],
+  imports: [I18N_PIPES, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule],
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>
@@ -25,15 +26,15 @@ export interface DecisionDialogData {
         <p>{{ data.message }}</p>
       }
       <mat-form-field appearance="outline" class="full">
-        <mat-label>{{ data.commentRequired ? 'Reason (required)' : 'Comment (optional)' }}</mat-label>
+        <mat-label>{{ (data.commentRequired ? 'Reason (required)' : 'Comment (optional)') | tr }}</mat-label>
         <textarea matInput [formControl]="comment" rows="3" maxlength="1000"></textarea>
         @if (comment.hasError('required')) {
-          <mat-error>Please give a reason.</mat-error>
+          <mat-error>{{ 'Please give a reason.' | tr }}</mat-error>
         }
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" mat-dialog-close>Cancel</button>
+      <button mat-button type="button" mat-dialog-close>{{ 'Cancel' | tr }}</button>
       <button mat-flat-button type="button" [class.destructive]="data.destructive" (click)="confirm()">
         {{ data.confirmLabel }}
       </button>

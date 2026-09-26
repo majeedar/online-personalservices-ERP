@@ -1,29 +1,30 @@
 <main class="page">
   <mat-card class="card" appearance="outlined">
     @if (submitting()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Signing in" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Signing in' | tr" />
     }
     <mat-card-header>
       <mat-icon mat-card-avatar class="logo" aria-hidden="true">account_balance</mat-icon>
-      <mat-card-title><h1>Online Personalservices</h1></mat-card-title>
-      <mat-card-subtitle>Example University — employee self-service</mat-card-subtitle>
+      <mat-card-title><h1>{{ 'Online Personalservices' | tr }}</h1></mat-card-title>
+      <mat-card-subtitle>{{ 'Example University — employee self-service' | tr }}</mat-card-subtitle>
+      <ops-language-switch class="lang" />
     </mat-card-header>
 
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <mat-form-field appearance="outline" class="full">
-          <mat-label>Username</mat-label>
+          <mat-label>{{ 'Username' | tr }}</mat-label>
           <input matInput formControlName="username" autocomplete="username" required />
           @if (form.controls.username.hasError('required')) {
-            <mat-error>Username is required.</mat-error>
+            <mat-error>{{ 'Username is required.' | tr }}</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full">
-          <mat-label>Password</mat-label>
+          <mat-label>{{ 'Password' | tr }}</mat-label>
           <input matInput type="password" formControlName="password" autocomplete="current-password" required />
           @if (form.controls.password.hasError('required')) {
-            <mat-error>Password is required.</mat-error>
+            <mat-error>{{ 'Password is required.' | tr }}</mat-error>
           }
         </mat-form-field>
 
@@ -34,16 +35,16 @@
           </p>
         }
 
-        <button mat-flat-button type="submit" class="full" [disabled]="submitting()">Sign in</button>
+        <button mat-flat-button type="submit" class="full" [disabled]="submitting()">{{ 'Sign in' | tr }}</button>
       </form>
 
       <section class="demo" aria-labelledby="demo-heading">
-        <h2 id="demo-heading">Demo accounts</h2>
-        <p class="hint">Simulated university SSO. Every demo account uses the password <code>demo123</code>.</p>
+        <h2 id="demo-heading">{{ 'Demo accounts' | tr }}</h2>
+        <p class="hint">{{ 'Simulated university SSO. Every demo account uses the password' | tr }} <code>demo123</code>.</p>
         <div class="demo-list">
           @for (account of demoAccounts; track account.username) {
             <button mat-stroked-button type="button" (click)="useDemoAccount(account.username)">
-              {{ account.label }}
+              {{ account.label | tr }}
             </button>
           }
         </div>

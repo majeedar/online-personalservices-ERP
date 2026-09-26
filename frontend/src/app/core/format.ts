@@ -1,3 +1,5 @@
+import { hasTranslation, locale, tr } from './i18n/i18n';
+
 /** 480 -> "8:00 h", -95 -> "-1:35 h" */
 export function formatMinutes(minutes: number): string {
   const sign = minutes < 0 ? '-' : '';
@@ -12,10 +14,17 @@ export function formatBalance(minutes: number): string {
   return (minutes > 0 ? '+' : '') + formatMinutes(minutes);
 }
 
-/** "STUDENT_ASSISTANT" -> "Student assistant" */
+/**
+ * Label for an enum code: the translation `enum.<CODE>` if there is one, else
+ * "STUDENT_ASSISTANT" -> "Student assistant".
+ */
 export function humanize(code: string | null | undefined): string {
   if (!code) {
     return '';
+  }
+  const key = `enum.${code}`;
+  if (hasTranslation(key)) {
+    return tr(key);
   }
   const text = code.replace(/_/g, ' ').toLowerCase();
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -40,10 +49,14 @@ export function formatDays(days: number | null | undefined): string {
     return '—';
   }
   const rounded = Math.round(days * 10) / 10;
-  return `${rounded} ${Math.abs(rounded) === 1 ? 'day' : 'days'}`;
+  const number = rounded.toLocaleString(locale(), { maximumFractionDigits: 1 });
+  return Math.abs(rounded) === 1 ? tr('{n} day', { n: number }) : tr('{n} days', { n: number });
 }
 
 /** " (morning)" / " (afternoon)" for a half day, "" for a full day. */
 export function halfDaySuffix(part: string | null | undefined): string {
-  return part === 'MORNING' || part === 'AFTERNOON' ? ` (${part.toLowerCase()})` : '';
+  if (part === 'MORNING') {
+    return ` (${tr('morning')})`;
+  }
+  return part === 'AFTERNOON' ? ` (${tr('afternoon')})` : '';
 }

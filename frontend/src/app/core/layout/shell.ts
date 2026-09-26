@@ -13,10 +13,14 @@ import { NotificationBadge } from '../../notifications/notification-badge.servic
 import { AuthService } from '../auth/auth.service';
 import { groupBySection, visibleNavItems } from '../navigation';
 import { humanize } from '../format';
+import { LanguageSwitch } from '../i18n/language-switch';
+import { I18N_PIPES } from '../i18n/pipes';
 
 @Component({
   selector: 'ops-shell',
   imports: [
+    LanguageSwitch,
+    I18N_PIPES,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,

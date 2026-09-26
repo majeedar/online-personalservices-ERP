@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +10,8 @@ import { MonthClosingStatus } from '../core/api/models';
 import { parseIsoDate } from '../core/format';
 import { askDecision } from '../shared/decision-dialog';
 import { StatusChip } from '../shared/status-chip';
+import { tr } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /**
  * Monthly closing of time accounts (TIME_ADMIN, HR_ADMIN). A closed month's
@@ -18,16 +19,16 @@ import { StatusChip } from '../shared/status-chip';
  */
 @Component({
   selector: 'ops-month-closing',
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
+  imports: [I18N_PIPES, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Month closing</h1>
-        <p>Closing freezes all time accounts of a past month. Pending corrections must be decided first.</p>
+        <h1>{{ 'Month closing' | tr }}</h1>
+        <p>{{ 'Closing freezes all time accounts of a past month. Pending corrections must be decided first.' | tr }}</p>
       </div>
     </header>
     @if (busy()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Working" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Working' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert"><mat-icon aria-hidden="true">error</mat-icon> {{ e }}</p>
@@ -38,26 +39,26 @@ import { StatusChip } from '../shared/status-chip';
     <mat-card appearance="outlined">
       <mat-card-content class="table-scroll">
         <table class="data">
-          <caption>Last 12 months</caption>
+          <caption>{{ 'Last 12 months' | tr }}</caption>
           <thead>
             <tr>
-              <th scope="col">Month</th>
-              <th scope="col">Status</th>
-              <th scope="col">Closed</th>
-              <th scope="col" class="num">Pending corrections</th>
-              <th scope="col">Actions</th>
+              <th scope="col">{{ 'Month' | tr }}</th>
+              <th scope="col">{{ 'Status' | tr }}</th>
+              <th scope="col">{{ 'Closed' | tr }}</th>
+              <th scope="col" class="num">{{ 'Pending corrections' | tr }}</th>
+              <th scope="col">{{ 'Actions' | tr }}</th>
             </tr>
           </thead>
           <tbody>
             @for (m of months(); track m.month) {
               <tr>
-                <th scope="row">{{ asDate(m.month) | date: 'MMMM y' }}</th>
+                <th scope="row">{{ asDate(m.month) | ldate: 'MMMM y' }}</th>
                 <td>
-                  <ops-status [status]="m.closed ? 'COMPLETED' : 'OPEN'" [label]="m.closed ? 'Closed' : 'Open'" />
+                  <ops-status [status]="m.closed ? 'COMPLETED' : 'OPEN'" [label]="(m.closed ? 'Closed' : 'Open') | tr" />
                 </td>
                 <td>
                   @if (m.closed) {
-                    {{ m.closedAt | date: 'medium' }} by {{ m.closedBy }} · {{ m.employees }} employees
+                    {{ '{date} by {name} · {count} employees' | tr: { date: m.closedAt | ldate: 'medium', name: m.closedBy, count: m.employees } }}
                   } @else {
                     <span class="muted">{{ m.blockedReason }}</span>
                   }
@@ -65,10 +66,10 @@ import { StatusChip } from '../shared/status-chip';
                 <td class="num" [class.negative]="m.pendingCorrections > 0">{{ m.pendingCorrections }}</td>
                 <td>
                   @if (m.closed) {
-                    <button mat-stroked-button type="button" (click)="reopen(m)" [disabled]="busy()">Reopen</button>
+                    <button mat-stroked-button type="button" (click)="reopen(m)" [disabled]="busy()">{{ 'Reopen' | tr }}</button>
                   } @else if (m.closable) {
                     <button mat-flat-button type="button" (click)="close(m)" [disabled]="busy()">
-                      <mat-icon>lock</mat-icon> Close month
+                      <mat-icon>lock</mat-icon> {{ 'Close month' | tr }}
                     </button>
                   }
                 </td>
@@ -99,9 +100,9 @@ export class MonthClosing {
 
   protected async close(m: MonthClosingStatus): Promise<void> {
     const result = await askDecision(this.dialog, {
-      title: `Close ${m.month}?`,
-      message: 'All time accounts of this month are recalculated one last time and frozen.',
-      confirmLabel: 'Close month',
+      title: tr('Close {month}?', { month: m.month }),
+      message: tr('All time accounts of this month are recalculated one last time and frozen.'),
+      confirmLabel: tr('Close month'),
       commentRequired: false,
     });
     if (result) {
@@ -111,9 +112,9 @@ export class MonthClosing {
 
   protected async reopen(m: MonthClosingStatus): Promise<void> {
     const result = await askDecision(this.dialog, {
-      title: `Reopen ${m.month}?`,
-      message: 'Corrections become possible again and the accounts are recalculated. The reopening is audited.',
-      confirmLabel: 'Reopen',
+      title: tr('Reopen {month}?', { month: m.month }),
+      message: tr('Corrections become possible again and the accounts are recalculated. The reopening is audited.'),
+      confirmLabel: tr('Reopen'),
       commentRequired: true,
       destructive: true,
     });

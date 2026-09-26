@@ -1,4 +1,4 @@
-import { DatePipe, PercentPipe } from '@angular/common';
+import { PercentPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,10 +8,11 @@ import { describeError } from '../core/api/api-error';
 import { Employment, Me, RoleAssignment, WorkSchedule } from '../core/api/models';
 import { formatMinutes, humanize } from '../core/format';
 import { EmployeeApi } from './employee-api.service';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 @Component({
   selector: 'ops-profile',
-  imports: [MatCardModule, MatIconModule, MatProgressBarModule, DatePipe, PercentPipe],
+  imports: [I18N_PIPES, MatCardModule, MatIconModule, MatProgressBarModule, PercentPipe],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

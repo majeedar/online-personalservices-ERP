@@ -1,5 +1,5 @@
 @if (loading()) {
-  <mat-progress-bar mode="indeterminate" aria-label="Loading profile" />
+  <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading profile' | tr" />
 }
 
 @if (error(); as message) {
@@ -7,81 +7,81 @@
 }
 
 @if (me(); as me) {
-  <h1>My profile</h1>
+  <h1>{{ 'My profile' | tr }}</h1>
   <p class="source-note">
     <mat-icon aria-hidden="true">info</mat-icon>
-    Master data is maintained in the personnel ERP. Please contact HR to request changes.
+    {{ 'Master data is maintained in the personnel ERP. Please contact HR to request changes.' | tr }}
   </p>
 
   <div class="grid">
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Personal data</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Personal data' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <dl>
-          <dt>Name</dt><dd>{{ me.displayName }}</dd>
-          <dt>Personnel number</dt><dd>{{ me.personnelNumber }}</dd>
-          <dt>Username</dt><dd>{{ me.username }}</dd>
-          <dt>Email</dt><dd>{{ me.email }}</dd>
-          <dt>Organisational unit</dt><dd>{{ me.organisationUnit?.name }} ({{ me.organisationUnit?.code }})</dd>
-          <dt>Cost centre</dt><dd>{{ me.organisationUnit?.costCentre }}</dd>
+          <dt>{{ 'Name' | tr }}</dt><dd>{{ me.displayName }}</dd>
+          <dt>{{ 'Personnel number' | tr }}</dt><dd>{{ me.personnelNumber }}</dd>
+          <dt>{{ 'Username' | tr }}</dt><dd>{{ me.username }}</dd>
+          <dt>{{ 'Email' | tr }}</dt><dd>{{ me.email }}</dd>
+          <dt>{{ 'Organisational unit' | tr }}</dt><dd>{{ me.organisationUnit?.name }} ({{ me.organisationUnit?.code }})</dd>
+          <dt>{{ 'Cost centre' | tr }}</dt><dd>{{ me.organisationUnit?.costCentre }}</dd>
         </dl>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Work schedule</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Work schedule' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         @if (schedule(); as s) {
           <table class="data">
             <caption>
-              Valid from {{ s.validFrom | date: 'mediumDate' }} · weekly target {{ formatMinutes(s.weeklyTargetMinutes) }}
+              {{ 'Valid from {date} · weekly target {target}' | tr: { date: s.validFrom | ldate: 'mediumDate', target: formatMinutes(s.weeklyTargetMinutes) } }}
             </caption>
             <thead>
-              <tr><th scope="col">Day</th><th scope="col">Target</th><th scope="col">Working day</th></tr>
+              <tr><th scope="col">{{ 'Day' | tr }}</th><th scope="col">{{ 'Target' | tr }}</th><th scope="col">{{ 'Working day' | tr }}</th></tr>
             </thead>
             <tbody>
               @for (d of s.days; track d.weekday) {
                 <tr [class.off]="!d.workingDay">
                   <th scope="row">{{ humanize(d.weekday) }}</th>
                   <td>{{ formatMinutes(d.targetMinutes) }}</td>
-                  <td>{{ d.workingDay ? 'Yes' : 'No' }}</td>
+                  <td>{{ (d.workingDay ? 'Yes' : 'No') | tr }}</td>
                 </tr>
               }
             </tbody>
           </table>
         } @else {
-          <p>No work schedule is valid today.</p>
+          <p>{{ 'No work schedule is valid today.' | tr }}</p>
         }
       </mat-card-content>
     </mat-card>
   </div>
 
   <mat-card appearance="outlined" class="wide">
-    <mat-card-header><mat-card-title><h2>Employment relationships</h2></mat-card-title></mat-card-header>
+    <mat-card-header><mat-card-title><h2>{{ 'Employment relationships' | tr }}</h2></mat-card-title></mat-card-header>
     <mat-card-content>
       <table class="data">
         <thead>
           <tr>
-            <th scope="col">Type</th>
-            <th scope="col">Start</th>
-            <th scope="col">End</th>
-            <th scope="col">Hours/week</th>
-            <th scope="col">FTE</th>
-            <th scope="col">Status</th>
+            <th scope="col">{{ 'Type' | tr }}</th>
+            <th scope="col">{{ 'Start' | tr }}</th>
+            <th scope="col">{{ 'End' | tr }}</th>
+            <th scope="col">{{ 'Hours/week' | tr }}</th>
+            <th scope="col">{{ 'FTE' | tr }}</th>
+            <th scope="col">{{ 'Status' | tr }}</th>
           </tr>
         </thead>
         <tbody>
           @for (e of employments(); track e.id) {
             <tr>
               <td>{{ humanize(e.employmentType) }}</td>
-              <td>{{ e.startDate | date: 'mediumDate' }}</td>
-              <td>{{ e.endDate ? (e.endDate | date: 'mediumDate') : '—' }}</td>
+              <td>{{ e.startDate | ldate: 'mediumDate' }}</td>
+              <td>{{ e.endDate ? (e.endDate | ldate: 'mediumDate') : '—' }}</td>
               <td>{{ e.weeklyHours }}</td>
               <td>{{ e.fullTimeEquivalent | percent }}</td>
               <td>
                 <span [class]="'status status-' + e.status.toLowerCase()">
                   <mat-icon aria-hidden="true">{{ e.current ? 'check_circle' : 'history' }}</mat-icon>
-                  {{ humanize(e.status) }}{{ e.current ? ' (current)' : '' }}
+                  {{ humanize(e.status) }}{{ e.current ? ' (' + ('current' | tr) + ')' : '' }}
                 </span>
               </td>
             </tr>
@@ -92,19 +92,19 @@
   </mat-card>
 
   <mat-card appearance="outlined" class="wide">
-    <mat-card-header><mat-card-title><h2>Roles</h2></mat-card-title></mat-card-header>
+    <mat-card-header><mat-card-title><h2>{{ 'Roles' | tr }}</h2></mat-card-title></mat-card-header>
     <mat-card-content>
       <table class="data">
         <thead>
-          <tr><th scope="col">Role</th><th scope="col">Valid from</th><th scope="col">Valid to</th><th scope="col">Active</th></tr>
+          <tr><th scope="col">{{ 'Role' | tr }}</th><th scope="col">{{ 'Valid from' | tr }}</th><th scope="col">{{ 'Valid to' | tr }}</th><th scope="col">{{ 'Active' | tr }}</th></tr>
         </thead>
         <tbody>
           @for (r of roles(); track r.role + r.validFrom) {
             <tr>
               <td>{{ humanize(r.role) }}</td>
-              <td>{{ r.validFrom | date: 'mediumDate' }}</td>
-              <td>{{ r.validTo ? (r.validTo | date: 'mediumDate') : 'open-ended' }}</td>
-              <td>{{ r.active ? 'Yes' : 'No' }}</td>
+              <td>{{ r.validFrom | ldate: 'mediumDate' }}</td>
+              <td>{{ r.validTo ? (r.validTo | ldate: 'mediumDate') : 'open-ended' }}</td>
+              <td>{{ (r.active ? 'Yes' : 'No') | tr }}</td>
             </tr>
           }
         </tbody>

@@ -1,22 +1,23 @@
-<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-content">{{ 'Skip to main content' | tr }}</a>
 
 <mat-toolbar class="topbar" role="banner">
   @if (handset()) {
-    <button mat-icon-button type="button" (click)="drawer.toggle()" aria-label="Toggle navigation">
+    <button mat-icon-button type="button" (click)="drawer.toggle()" [attr.aria-label]="'Toggle navigation' | tr">
       <mat-icon>menu</mat-icon>
     </button>
   }
   <span class="brand">
     <mat-icon aria-hidden="true">account_balance</mat-icon>
-    Online Personalservices
+    {{ 'Online Personalservices' | tr }}
   </span>
   <span class="spacer"></span>
+  <ops-language-switch />
   @if (session(); as s) {
     <a
       mat-icon-button
       routerLink="/notifications"
       class="bell"
-      [attr.aria-label]="unread() ? unread() + ' unread notifications' : 'Notifications'"
+      [attr.aria-label]="unread() ? ('{count} unread notifications' | tr: { count: unread() }) : ('Notifications' | tr)"
     >
       <mat-icon>{{ unread() ? 'notifications_active' : 'notifications' }}</mat-icon>
       @if (unread()) {
@@ -34,11 +35,11 @@
       </div>
       <a mat-menu-item routerLink="/profile">
         <mat-icon>badge</mat-icon>
-        <span>My profile</span>
+        <span>{{ 'My profile' | tr }}</span>
       </a>
       <button mat-menu-item type="button" (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span>Log out</span>
+        <span>{{ 'Log out' | tr }}</span>
       </button>
     </mat-menu>
   }
@@ -51,10 +52,10 @@
     [opened]="!handset()"
     class="sidenav"
     role="navigation"
-    aria-label="Main navigation"
+    [attr.aria-label]="'Main navigation' | tr"
   >
     @for (group of navGroups(); track group.section) {
-      <h2 class="nav-section">{{ group.section }}</h2>
+      <h2 class="nav-section">{{ group.section | tr }}</h2>
       <mat-nav-list>
         @for (item of group.items; track item.route) {
           <a
@@ -66,7 +67,7 @@
             (click)="handset() && drawer.close()"
           >
             <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.label }}</span>
+            <span matListItemTitle>{{ item.label | tr }}</span>
           </a>
         }
       </mat-nav-list>

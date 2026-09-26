@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,27 +9,28 @@ import { describeError } from '../core/api/api-error';
 import { AbsenceSummary, LeaveBalance } from '../core/api/models';
 import { formatDays, halfDaySuffix } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 @Component({
   selector: 'ops-absence-list',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
+  imports: [I18N_PIPES, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Absence</h1>
-        <p>Leave requests and your balance for {{ year }}.</p>
+        <h1>{{ 'Absence' | tr }}</h1>
+        <p>{{ 'Leave requests and your balance for {year}.' | tr: { year } }}</p>
       </div>
-      <a mat-flat-button routerLink="/absence/new"><mat-icon>add</mat-icon> New request</a>
+      <a mat-flat-button routerLink="/absence/new"><mat-icon>add</mat-icon> {{ 'New request' | tr }}</a>
     </header>
 
     @if (loading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
     }
 
-    <section class="cards" aria-label="Leave balance">
+    <section class="cards" [attr.aria-label]="'Leave balance' | tr">
       @for (b of balances(); track b.leaveTypeCode) {
         <mat-card appearance="outlined">
           <mat-card-header>
@@ -39,10 +39,10 @@ import { StatusChip } from '../shared/status-chip';
           </mat-card-header>
           <mat-card-content>
             <p class="figure">{{ formatDays(b.remainingDays) }}</p>
-            <p class="muted">remaining of {{ b.baseDays + b.carryOverDays + b.additionalDays }}</p>
-            <p>Used {{ b.usedDays }} · Pending {{ b.reservedDays }}</p>
+            <p class="muted">{{ 'remaining of {total}' | tr: { total: b.baseDays + b.carryOverDays + b.additionalDays } }}</p>
+            <p>{{ 'Used {used} · Pending {pending}' | tr: { used: b.usedDays, pending: b.reservedDays } }}</p>
             @if (b.carryOverDays > 0) {
-              <p class="muted">Carry-over {{ b.carryOverDays }} (expires {{ b.carryOverExpiry | date: 'mediumDate' }})</p>
+              <p class="muted">{{ 'Carry-over {days} (expires {date})' | tr: { days: b.carryOverDays, date: b.carryOverExpiry | ldate: 'mediumDate' } }}</p>
             }
           </mat-card-content>
         </mat-card>
@@ -52,27 +52,27 @@ import { StatusChip } from '../shared/status-chip';
     <mat-card appearance="outlined">
       <mat-card-content>
         @if (requests().length === 0 && !loading()) {
-          <p class="muted">You have no absence requests yet.</p>
+          <p class="muted">{{ 'You have no absence requests yet.' | tr }}</p>
         } @else {
           <div class="table-scroll">
             <table class="data">
-              <caption>Your absence requests</caption>
+              <caption>{{ 'Your absence requests' | tr }}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Type</th>
-                  <th scope="col">From</th>
-                  <th scope="col">To</th>
-                  <th scope="col" class="num">Working days</th>
-                  <th scope="col" class="num">Deducted</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">{{ 'Type' | tr }}</th>
+                  <th scope="col">{{ 'From' | tr }}</th>
+                  <th scope="col">{{ 'To' | tr }}</th>
+                  <th scope="col" class="num">{{ 'Working days' | tr }}</th>
+                  <th scope="col" class="num">{{ 'Deducted' | tr }}</th>
+                  <th scope="col">{{ 'Status' | tr }}</th>
                 </tr>
               </thead>
               <tbody>
                 @for (r of requests(); track r.id) {
                   <tr>
                     <td><a [routerLink]="['/absence', r.id]">{{ r.leaveType.name }}</a></td>
-                    <td>{{ r.startDate | date: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}</td>
-                    <td>{{ r.endDate | date: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}</td>
+                    <td>{{ r.startDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}</td>
+                    <td>{{ r.endDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}</td>
                     <td class="num">{{ r.workingDays }}</td>
                     <td class="num">{{ r.deduction }}</td>
                     <td><ops-status [status]="r.status" /></td>

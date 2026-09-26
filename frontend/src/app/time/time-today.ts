@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,12 +8,14 @@ import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { EntryType, TimeToday as Today } from '../core/api/models';
 import { formatBalance, formatMinutes, humanize } from '../core/format';
+import { tr, marker } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
-  { type: 'CLOCK_IN', label: 'Clock in', icon: 'login' },
-  { type: 'BREAK_START', label: 'Start break', icon: 'coffee' },
-  { type: 'BREAK_END', label: 'End break', icon: 'work' },
-  { type: 'CLOCK_OUT', label: 'Clock out', icon: 'logout' },
+  { type: 'CLOCK_IN', label: marker('Clock in'), icon: 'login' },
+  { type: 'BREAK_START', label: marker('Start break'), icon: 'coffee' },
+  { type: 'BREAK_END', label: marker('End break'), icon: 'work' },
+  { type: 'CLOCK_OUT', label: marker('Clock out'), icon: 'logout' },
 ];
 
 /**
@@ -23,14 +24,14 @@ const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
  */
 @Component({
   selector: 'ops-time-today',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule],
+  imports: [I18N_PIPES, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>Working time</h1>
-        <p>{{ today()?.date | date: 'fullDate' }}</p>
+        <h1>{{ 'Working time' | tr }}</h1>
+        <p>{{ today()?.date | ldate: 'fullDate' }}</p>
       </div>
-      <a mat-stroked-button routerLink="/time/month"><mat-icon>calendar_month</mat-icon> Monthly overview</a>
+      <a mat-stroked-button routerLink="/time/month"><mat-icon>calendar_month</mat-icon> {{ 'Monthly overview' | tr }}</a>
     </header>
     @if (error(); as e) {
       <p class="error-banner" role="alert"><mat-icon aria-hidden="true">error</mat-icon> {{ e }}</p>
@@ -38,10 +39,10 @@ const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
 
     <div class="grid-2">
       <mat-card appearance="outlined">
-        <mat-card-header><mat-card-title><h2>Time clock</h2></mat-card-title></mat-card-header>
+        <mat-card-header><mat-card-title><h2>{{ 'Time clock' | tr }}</h2></mat-card-title></mat-card-header>
         <mat-card-content>
           <p class="state" aria-live="polite">
-            Status: <strong>{{ stateLabel() }}</strong>
+            {{ 'Status:' | tr }} <strong>{{ stateLabel() }}</strong>
           </p>
           <div class="clock-buttons">
             @for (a of actions; track a.type) {
@@ -51,40 +52,40 @@ const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
                 [disabled]="busy() || !allowed(a.type)"
                 (click)="clock(a.type)"
               >
-                <mat-icon>{{ a.icon }}</mat-icon> {{ a.label }}
+                <mat-icon>{{ a.icon }}</mat-icon> {{ a.label | tr }}
               </button>
             }
           </div>
-          <h3>Today's entries</h3>
+          <h3>{{ 'Today\'s entries' | tr }}</h3>
           <ol class="entries">
             @for (e of today()?.entries ?? []; track e.id) {
-              <li><time>{{ e.timestamp | date: 'HH:mm' }}</time> {{ humanize(e.type) }} <span class="muted">({{ humanize(e.source) }})</span></li>
+              <li><time>{{ e.timestamp | ldate: 'HH:mm' }}</time> {{ humanize(e.type) }} <span class="muted">({{ humanize(e.source) }})</span></li>
             } @empty {
-              <li class="muted">No entries yet.</li>
+              <li class="muted">{{ 'No entries yet.' | tr }}</li>
             }
           </ol>
         </mat-card-content>
       </mat-card>
 
       <mat-card appearance="outlined">
-        <mat-card-header><mat-card-title><h2>Today's account</h2></mat-card-title></mat-card-header>
+        <mat-card-header><mat-card-title><h2>{{ 'Today\'s account' | tr }}</h2></mat-card-title></mat-card-header>
         <mat-card-content>
           @if (today()?.account; as a) {
             <dl class="dl">
-              <dt>Target</dt><dd>{{ formatMinutes(a.targetMinutes) }}</dd>
-              <dt>Worked</dt><dd>{{ formatMinutes(a.workedMinutes) }}</dd>
-              <dt>Breaks</dt><dd>{{ formatMinutes(a.breakMinutes) }}</dd>
+              <dt>{{ 'Target' | tr }}</dt><dd>{{ formatMinutes(a.targetMinutes) }}</dd>
+              <dt>{{ 'Worked' | tr }}</dt><dd>{{ formatMinutes(a.workedMinutes) }}</dd>
+              <dt>{{ 'Breaks' | tr }}</dt><dd>{{ formatMinutes(a.breakMinutes) }}</dd>
               @if (a.absenceMinutes) {
-                <dt>Absence ({{ humanize(a.absenceType) }})</dt><dd>{{ formatMinutes(a.absenceMinutes) }}</dd>
+                <dt>{{ 'Absence' | tr }} ({{ humanize(a.absenceType) }})</dt><dd>{{ formatMinutes(a.absenceMinutes) }}</dd>
               }
-              <dt>Balance</dt><dd [class.negative]="a.balanceMinutes < 0"><strong>{{ formatBalance(a.balanceMinutes) }}</strong></dd>
+              <dt>{{ 'Balance' | tr }}</dt><dd [class.negative]="a.balanceMinutes < 0"><strong>{{ formatBalance(a.balanceMinutes) }}</strong></dd>
             </dl>
             @if (a.statutoryBreakApplied) {
-              <p class="info-banner"><mat-icon aria-hidden="true">info</mat-icon> The statutory minimum break was deducted.</p>
+              <p class="info-banner"><mat-icon aria-hidden="true">info</mat-icon> {{ 'The statutory minimum break was deducted.' | tr }}</p>
             }
           }
-          <h3>Balance</h3>
-          <p>This month: <strong>{{ formatBalance(balance().month) }}</strong> · This year: <strong>{{ formatBalance(balance().year) }}</strong></p>
+          <h3>{{ 'Balance' | tr }}</h3>
+          <p>{{ 'This month:' | tr }} <strong>{{ formatBalance(balance().month) }}</strong> {{ '· This year:' | tr }} <strong>{{ formatBalance(balance().year) }}</strong></p>
         </mat-card-content>
       </mat-card>
     </div>
@@ -125,7 +126,7 @@ export class TimeToday implements OnDestroy {
 
   protected stateLabel(): string {
     const state = this.today()?.state;
-    return state === 'WORKING' ? 'Working' : state === 'ON_BREAK' ? 'On break' : 'Not clocked in';
+    return tr(state === 'WORKING' ? 'Working' : state === 'ON_BREAK' ? 'On break' : 'Not clocked in');
   }
 
   private async load(): Promise<void> {

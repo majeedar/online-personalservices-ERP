@@ -9,16 +9,17 @@ import { MatListModule } from '@angular/material/list';
 import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { Report, ReportInfo } from '../core/api/models';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Simple reports with CSV export (AGENT.md §81); the list depends on the user's roles. */
 @Component({
   selector: 'ops-reports',
-  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatListModule],
+  imports: [I18N_PIPES, FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatListModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>Reports</h1>
-        <p>Only reports your roles permit are listed.</p>
+        <h1>{{ 'Reports' | tr }}</h1>
+        <p>{{ 'Only reports your roles permit are listed.' | tr }}</p>
       </div>
     </header>
     @if (error(); as e) {
@@ -26,11 +27,11 @@ import { Report, ReportInfo } from '../core/api/models';
     }
     <div class="layout">
       <mat-card appearance="outlined">
-        <mat-nav-list aria-label="Reports">
+        <mat-nav-list [attr.aria-label]="'Reports' | tr">
           @for (r of available(); track r.id) {
             <a mat-list-item href="#" (click)="$event.preventDefault(); select(r)" [activated]="selected()?.id === r.id">{{ r.title }}</a>
           } @empty {
-            <p class="muted pad">No reports available for your roles.</p>
+            <p class="muted pad">{{ 'No reports available for your roles.' | tr }}</p>
           }
         </mat-nav-list>
       </mat-card>
@@ -39,13 +40,13 @@ import { Report, ReportInfo } from '../core/api/models';
           @if (selected(); as r) {
             <div class="actions params">
               @if (r.id === 'leave-usage') {
-                <mat-form-field appearance="outline"><mat-label>Year</mat-label><input matInput type="number" [(ngModel)]="year" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>{{ 'Year' | tr }}</mat-label><input matInput type="number" [(ngModel)]="year" /></mat-form-field>
               }
               @if (r.id === 'working-time') {
-                <mat-form-field appearance="outline"><mat-label>Month</mat-label><input matInput type="month" [(ngModel)]="month" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>{{ 'Month' | tr }}</mat-label><input matInput type="month" [(ngModel)]="month" /></mat-form-field>
               }
-              <button mat-stroked-button type="button" (click)="select(r)"><mat-icon>refresh</mat-icon> Run</button>
-              <a mat-stroked-button [href]="csvUrl(r)"><mat-icon>download</mat-icon> CSV</a>
+              <button mat-stroked-button type="button" (click)="select(r)"><mat-icon>refresh</mat-icon> {{ 'Run' | tr }}</button>
+              <a mat-stroked-button [href]="csvUrl(r)"><mat-icon>download</mat-icon> {{ 'CSV' | tr }}</a>
             </div>
             @if (report(); as rep) {
               <div class="table-scroll">
@@ -56,14 +57,14 @@ import { Report, ReportInfo } from '../core/api/models';
                     @for (row of rep.rows; track $index) {
                       <tr>@for (cell of row; track $index) {<td>{{ cell }}</td>}</tr>
                     } @empty {
-                      <tr><td [attr.colspan]="rep.columns.length" class="muted">No data.</td></tr>
+                      <tr><td [attr.colspan]="rep.columns.length" class="muted">{{ 'No data.' | tr }}</td></tr>
                     }
                   </tbody>
                 </table>
               </div>
             }
           } @else {
-            <p class="muted">Choose a report.</p>
+            <p class="muted">{{ 'Choose a report.' | tr }}</p>
           }
         </mat-card-content>
       </mat-card>

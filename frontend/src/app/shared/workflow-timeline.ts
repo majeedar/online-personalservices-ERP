@@ -1,24 +1,24 @@
-import { DatePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { InstanceHistory } from '../core/api/models';
 import { humanize } from '../core/format';
 import { StatusChip } from './status-chip';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Approval history of a request: steps, assignees, decisions (AGENT.md §88 "workflow timeline"). */
 @Component({
   selector: 'ops-workflow-timeline',
-  imports: [DatePipe, MatIconModule, StatusChip],
+  imports: [I18N_PIPES, MatIconModule, StatusChip],
   template: `
     @if (history().length === 0) {
-      <p class="muted">No approval steps yet.</p>
+      <p class="muted">{{ 'No approval steps yet.' | tr }}</p>
     }
     @for (run of history(); track run.instanceId) {
       <section class="run" [attr.aria-label]="humanize(run.definitionCode)">
         <h3>
           {{ humanize(run.definitionCode) }}
           <ops-status [status]="run.status" />
-          <span class="muted small">started {{ run.createdAt | date: 'short' }}</span>
+          <span class="muted small">{{ 'started {date}' | tr: { date: run.createdAt | ldate: 'short' } }}</span>
         </h3>
         <ol class="steps">
           @for (step of run.steps; track step.stepNumber) {
@@ -28,20 +28,20 @@ import { StatusChip } from './status-chip';
                 <ops-status [status]="step.status" />
               </div>
               <div class="muted small">
-                Assigned to {{ step.assignedEmployeeName ?? (step.assignedRole ? humanize(step.assignedRole) : '—') }}
+                {{ 'Assigned to' | tr }} {{ step.assignedEmployeeName ?? (step.assignedRole ? humanize(step.assignedRole) : '—') }}
                 @if (step.assignedEmployeeName && step.assignedRole) {
-                  (or any {{ humanize(step.assignedRole) }})
+                  {{ '(or any {role})' | tr: { role: humanize(step.assignedRole) } }}
                 }
               </div>
               @for (d of step.decisions; track d.decidedAt) {
                 <div class="decision">
                   <mat-icon aria-hidden="true">{{ d.decision === 'APPROVE' ? 'thumb_up' : d.decision === 'FORWARD' ? 'forward' : 'thumb_down' }}</mat-icon>
                   <span>
-                    <strong>{{ humanize(d.decision) }}</strong> by {{ d.approverName }}
+                    <strong>{{ humanize(d.decision) }}</strong> {{ 'by {name}' | tr: { name: d.approverName } }}
                     @if (d.onBehalfOfName) {
-                      <em>on behalf of {{ d.onBehalfOfName }}</em>
+                      <em>{{ 'on behalf of {name}' | tr: { name: d.onBehalfOfName } }}</em>
                     }
-                    · {{ d.decidedAt | date: 'short' }}
+                    · {{ d.decidedAt | ldate: 'short' }}
                     @if (d.comment) {
                       <q>{{ d.comment }}</q>
                     }

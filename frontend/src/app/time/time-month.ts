@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,59 +12,60 @@ import { TimeCorrection, TimeMonth as Month } from '../core/api/models';
 import { formatBalance, formatMinutes, humanize } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
 import { CorrectionDialog } from './correction-dialog';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Monthly overview with daily balances and corrections (AGENT.md §44). */
 @Component({
   selector: 'ops-time-month',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
+  imports: [I18N_PIPES, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Monthly overview</h1>
-        <p>{{ monthStart() | date: 'MMMM y' }}</p>
+        <h1>{{ 'Monthly overview' | tr }}</h1>
+        <p>{{ monthStart() | ldate: 'MMMM y' }}</p>
       </div>
       <div class="actions">
-        <button mat-stroked-button type="button" (click)="shift(-1)" aria-label="Previous month"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-stroked-button type="button" (click)="shift(1)" aria-label="Next month"><mat-icon>chevron_right</mat-icon></button>
-        <a mat-stroked-button routerLink="/time"><mat-icon>schedule</mat-icon> Today</a>
+        <button mat-stroked-button type="button" (click)="shift(-1)" [attr.aria-label]="'Previous month' | tr"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-stroked-button type="button" (click)="shift(1)" [attr.aria-label]="'Next month' | tr"><mat-icon>chevron_right</mat-icon></button>
+        <a mat-stroked-button routerLink="/time"><mat-icon>schedule</mat-icon> {{ 'Today' | tr }}</a>
       </div>
     </header>
     @if (loading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
     }
     @if (month(); as m) {
       @if (closed()) {
-        <p class="info-banner" role="status"><mat-icon aria-hidden="true">lock</mat-icon> This month is closed. Its accounts are final; ask a time administrator if something must still be corrected.</p>
+        <p class="info-banner" role="status"><mat-icon aria-hidden="true">lock</mat-icon> {{ 'This month is closed. Its accounts are final; ask a time administrator if something must still be corrected.' | tr }}</p>
       }
-      <section class="cards" aria-label="Month totals">
-        <div class="total"><span class="muted">Target</span><strong>{{ formatMinutes(m.totals.targetMinutes) }}</strong></div>
-        <div class="total"><span class="muted">Worked</span><strong>{{ formatMinutes(m.totals.workedMinutes) }}</strong></div>
-        <div class="total"><span class="muted">Credited</span><strong>{{ formatMinutes(m.totals.creditedMinutes) }}</strong></div>
-        <div class="total"><span class="muted">Balance</span><strong [class.negative]="m.totals.balanceMinutes < 0">{{ formatBalance(m.totals.balanceMinutes) }}</strong></div>
+      <section class="cards" [attr.aria-label]="'Month totals' | tr">
+        <div class="total"><span class="muted">{{ 'Target' | tr }}</span><strong>{{ formatMinutes(m.totals.targetMinutes) }}</strong></div>
+        <div class="total"><span class="muted">{{ 'Worked' | tr }}</span><strong>{{ formatMinutes(m.totals.workedMinutes) }}</strong></div>
+        <div class="total"><span class="muted">{{ 'Credited' | tr }}</span><strong>{{ formatMinutes(m.totals.creditedMinutes) }}</strong></div>
+        <div class="total"><span class="muted">{{ 'Balance' | tr }}</span><strong [class.negative]="m.totals.balanceMinutes < 0">{{ formatBalance(m.totals.balanceMinutes) }}</strong></div>
       </section>
       <mat-card appearance="outlined">
         <mat-card-content class="table-scroll">
           <table class="data">
-            <caption>Daily accounts</caption>
+            <caption>{{ 'Daily accounts' | tr }}</caption>
             <thead>
               <tr>
-                <th scope="col">Day</th>
-                <th scope="col" class="num">Target</th>
-                <th scope="col" class="num">Worked</th>
-                <th scope="col" class="num">Breaks</th>
-                <th scope="col">Absence / holiday</th>
-                <th scope="col" class="num">Balance</th>
-                <th scope="col">Status</th>
-                <th scope="col"><span class="sr-only">Actions</span></th>
+                <th scope="col">{{ 'Day' | tr }}</th>
+                <th scope="col" class="num">{{ 'Target' | tr }}</th>
+                <th scope="col" class="num">{{ 'Worked' | tr }}</th>
+                <th scope="col" class="num">{{ 'Breaks' | tr }}</th>
+                <th scope="col">{{ 'Absence / holiday' | tr }}</th>
+                <th scope="col" class="num">{{ 'Balance' | tr }}</th>
+                <th scope="col">{{ 'Status' | tr }}</th>
+                <th scope="col"><span class="sr-only">{{ 'Actions' | tr }}</span></th>
               </tr>
             </thead>
             <tbody>
               @for (d of m.days; track d.date) {
                 <tr [class.off]="d.future || (d.targetMinutes === 0 && !d.workedMinutes)">
-                  <th scope="row">{{ d.date | date: 'EEE d' }}</th>
+                  <th scope="row">{{ d.date | ldate: 'EEE d' }}</th>
                   <td class="num">{{ d.targetMinutes ? formatMinutes(d.targetMinutes) : '—' }}</td>
                   <td class="num">{{ d.workedMinutes ? formatMinutes(d.workedMinutes) : '—' }}</td>
                   <td class="num">{{ d.breakMinutes ? formatMinutes(d.breakMinutes) : '—' }}</td>
@@ -73,14 +73,14 @@ import { CorrectionDialog } from './correction-dialog';
                   <td class="num" [class.negative]="d.balanceMinutes < 0">{{ d.accounted ? formatBalance(d.balanceMinutes) : '' }}</td>
                   <td>
                     @if (d.incomplete && !d.future) {
-                      <span class="status status-failed">Missing entry</span>
+                      <span class="status status-failed">{{ 'Missing entry' | tr }}</span>
                     } @else if (!d.future) {
                       <ops-status [status]="d.status" />
                     }
                   </td>
                   <td>
                     @if (!d.future && d.status !== 'CORRECTION_PENDING' && d.status !== 'CLOSED') {
-                      <button mat-button type="button" (click)="correct(d.date)">Correct</button>
+                      <button mat-button type="button" (click)="correct(d.date)">{{ 'Correct' | tr }}</button>
                     }
                   </td>
                 </tr>
@@ -92,20 +92,20 @@ import { CorrectionDialog } from './correction-dialog';
     }
 
     <mat-card appearance="outlined" class="corrections">
-      <mat-card-header><mat-card-title><h2>My correction requests</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'My correction requests' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <table class="data">
-          <thead><tr><th scope="col">Day</th><th scope="col">Correction</th><th scope="col">Reason</th><th scope="col">Status</th></tr></thead>
+          <thead><tr><th scope="col">{{ 'Day' | tr }}</th><th scope="col">{{ 'Correction' | tr }}</th><th scope="col">{{ 'Reason' | tr }}</th><th scope="col">{{ 'Status' | tr }}</th></tr></thead>
           <tbody>
             @for (c of corrections(); track c.id) {
               <tr>
-                <td><a [routerLink]="['/time/corrections', c.id]">{{ c.date | date: 'mediumDate' }}</a></td>
-                <td>{{ humanize(c.operation) }} {{ c.requestedType ? humanize(c.requestedType) : '' }} {{ c.requestedTimestamp ? (c.requestedTimestamp | date: 'HH:mm') : '' }}</td>
+                <td><a [routerLink]="['/time/corrections', c.id]">{{ c.date | ldate: 'mediumDate' }}</a></td>
+                <td>{{ humanize(c.operation) }} {{ c.requestedType ? humanize(c.requestedType) : '' }} {{ c.requestedTimestamp ? (c.requestedTimestamp | ldate: 'HH:mm') : '' }}</td>
                 <td>{{ c.reason }}</td>
                 <td><ops-status [status]="c.status" /></td>
               </tr>
             } @empty {
-              <tr><td colspan="4" class="muted">None.</td></tr>
+              <tr><td colspan="4" class="muted">{{ 'None.' | tr }}</td></tr>
             }
           </tbody>
         </table>

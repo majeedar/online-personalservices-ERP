@@ -1,4 +1,4 @@
-import { DatePipe, KeyValuePipe } from '@angular/common';
+import { KeyValuePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,7 @@ import { IntegrationErrorInfo, IntegrationRunInfo, SystemHealth } from '../core/
 import { AuthService } from '../core/auth/auth.service';
 import { humanize } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 const SYSTEMS: Record<string, string> = {
   'Personnel ERP': 'PERSONNEL_ERP',
@@ -20,60 +21,60 @@ const SYSTEMS: Record<string, string> = {
 /** Integration runs, errors with retry, and system health (AGENT.md §26, §63, §83). */
 @Component({
   selector: 'ops-integration-monitor',
-  imports: [DatePipe, KeyValuePipe, MatButtonModule, MatCardModule, MatIconModule, MatSlideToggleModule, StatusChip],
+  imports: [I18N_PIPES, KeyValuePipe, MatButtonModule, MatCardModule, MatIconModule, MatSlideToggleModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Integration monitor</h1>
-        <p>Exports to the university's systems are retried automatically; failures stay here until resolved.</p>
+        <h1>{{ 'Integration monitor' | tr }}</h1>
+        <p>{{ 'Exports to the university\'s systems are retried automatically; failures stay here until resolved.' | tr }}</p>
       </div>
-      <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon> Refresh</button>
+      <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon> {{ 'Refresh' | tr }}</button>
     </header>
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
     }
 
     @if (health(); as h) {
-      <section class="cards" aria-label="System health">
+      <section class="cards" [attr.aria-label]="'System health' | tr">
         @for (c of h.components | keyvalue; track c.key) {
           <div class="tile">
             <span class="muted">{{ c.key }}</span>
             <ops-status [status]="c.value" />
             @if (isAdmin() && systemCode(c.key); as code) {
-              <mat-slide-toggle [checked]="c.value === 'DOWN'" (change)="outage(code, $event.checked)">Simulate outage</mat-slide-toggle>
+              <mat-slide-toggle [checked]="c.value === 'DOWN'" (change)="outage(code, $event.checked)">{{ 'Simulate outage' | tr }}</mat-slide-toggle>
             }
           </div>
         }
-        <div class="tile"><span class="muted">Pending exports</span><strong>{{ h.pendingExports }}</strong></div>
-        <div class="tile"><span class="muted">Open integration errors</span><strong [class.negative]="h.openIntegrationErrors > 0">{{ h.openIntegrationErrors }}</strong></div>
-        <div class="tile"><span class="muted">Failed batch runs (24 h)</span><strong [class.negative]="h.failedBatchRunsLast24h > 0">{{ h.failedBatchRunsLast24h }}</strong></div>
-        <div class="tile"><span class="muted">Open approval tasks</span><strong>{{ h.openWorkflowTasks }}</strong></div>
+        <div class="tile"><span class="muted">{{ 'Pending exports' | tr }}</span><strong>{{ h.pendingExports }}</strong></div>
+        <div class="tile"><span class="muted">{{ 'Open integration errors' | tr }}</span><strong [class.negative]="h.openIntegrationErrors > 0">{{ h.openIntegrationErrors }}</strong></div>
+        <div class="tile"><span class="muted">{{ 'Failed batch runs (24 h)' | tr }}</span><strong [class.negative]="h.failedBatchRunsLast24h > 0">{{ h.failedBatchRunsLast24h }}</strong></div>
+        <div class="tile"><span class="muted">{{ 'Open approval tasks' | tr }}</span><strong>{{ h.openWorkflowTasks }}</strong></div>
       </section>
     }
 
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Open errors</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Open errors' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content class="table-scroll">
         <table class="data">
-          <thead><tr><th scope="col">Time</th><th scope="col">Reference</th><th scope="col">Error</th><th scope="col" class="num">Retries</th><th scope="col"></th></tr></thead>
+          <thead><tr><th scope="col">{{ 'Time' | tr }}</th><th scope="col">{{ 'Reference' | tr }}</th><th scope="col">{{ 'Error' | tr }}</th><th scope="col" class="num">{{ 'Retries' | tr }}</th><th scope="col"></th></tr></thead>
           <tbody>
             @for (e of errors(); track e.id) {
               <tr>
-                <td>{{ e.createdAt | date: 'medium' }}</td>
+                <td>{{ e.createdAt | ldate: 'medium' }}</td>
                 <td>{{ e.externalReference ?? '—' }}</td>
                 <td><strong>{{ e.errorCode }}</strong><div class="muted">{{ e.errorMessage }}</div></td>
                 <td class="num">{{ e.retryCount }}</td>
                 <td class="actions">
                   @if (e.retryable && canRetry()) {
-                    <button mat-flat-button type="button" (click)="retry(e)"><mat-icon>replay</mat-icon> Retry</button>
+                    <button mat-flat-button type="button" (click)="retry(e)"><mat-icon>replay</mat-icon> {{ 'Retry' | tr }}</button>
                   }
                   @if (isAdmin()) {
-                    <button mat-button type="button" (click)="resolve(e)">Mark resolved</button>
+                    <button mat-button type="button" (click)="resolve(e)">{{ 'Mark resolved' | tr }}</button>
                   }
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="5" class="muted">No open errors.</td></tr>
+              <tr><td colspan="5" class="muted">{{ 'No open errors.' | tr }}</td></tr>
             }
           </tbody>
         </table>
@@ -81,14 +82,14 @@ const SYSTEMS: Record<string, string> = {
     </mat-card>
 
     <mat-card appearance="outlined" class="runs">
-      <mat-card-header><mat-card-title><h2>Integration runs</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Integration runs' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content class="table-scroll">
         <table class="data">
-          <thead><tr><th scope="col">Started</th><th scope="col">Interface</th><th scope="col">Trigger</th><th scope="col">Status</th><th scope="col" class="num">Read</th><th scope="col" class="num">Written</th><th scope="col" class="num">Failed</th></tr></thead>
+          <thead><tr><th scope="col">{{ 'Started' | tr }}</th><th scope="col">{{ 'Interface' | tr }}</th><th scope="col">{{ 'Trigger' | tr }}</th><th scope="col">{{ 'Status' | tr }}</th><th scope="col" class="num">{{ 'Read' | tr }}</th><th scope="col" class="num">{{ 'Written' | tr }}</th><th scope="col" class="num">{{ 'Failed' | tr }}</th></tr></thead>
           <tbody>
             @for (r of runs(); track r.id) {
               <tr>
-                <td>{{ r.startedAt | date: 'medium' }}</td>
+                <td>{{ r.startedAt | ldate: 'medium' }}</td>
                 <td>{{ humanize(r.interfaceName) }}</td>
                 <td>{{ humanize(r.trigger) }}</td>
                 <td><ops-status [status]="r.status" /></td>

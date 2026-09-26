@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +8,7 @@ import { describeError } from '../core/api/api-error';
 import { TeamAbsence } from '../core/api/models';
 import { halfDaySuffix, isoDate, parseIsoDate } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 interface Row {
   name: string;
@@ -22,16 +22,16 @@ interface Row {
  */
 @Component({
   selector: 'ops-team-calendar',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, StatusChip],
+  imports: [I18N_PIPES, RouterLink, MatButtonModule, MatCardModule, MatIconModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Team calendar</h1>
-        <p>Absences of the people whose requests you approve, {{ from() | date: 'mediumDate' }} – {{ to() | date: 'mediumDate' }}.</p>
+        <h1>{{ 'Team calendar' | tr }}</h1>
+        <p>{{ 'Absences of the people whose requests you approve, {from} – {to}.' | tr: { from: from() | ldate: 'mediumDate', to: to() | ldate: 'mediumDate' } }}</p>
       </div>
       <div class="actions">
-        <button mat-stroked-button type="button" (click)="shift(-28)" aria-label="Previous four weeks"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-stroked-button type="button" (click)="shift(28)" aria-label="Next four weeks"><mat-icon>chevron_right</mat-icon></button>
+        <button mat-stroked-button type="button" (click)="shift(-28)" [attr.aria-label]="'Previous four weeks' | tr"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-stroked-button type="button" (click)="shift(28)" [attr.aria-label]="'Next four weeks' | tr"><mat-icon>chevron_right</mat-icon></button>
       </div>
     </header>
     @if (error(); as e) {
@@ -41,19 +41,19 @@ interface Row {
     <mat-card appearance="outlined">
       <mat-card-content>
         <p class="legend">
-          <span class="cell approved">A</span> approved
-          <span class="cell pending">P</span> pending
-          <span class="cell weekend"></span> weekend
-          <span>½ half day</span>
+          <span class="cell approved">{{ 'A' | tr }}</span> {{ 'approved' | tr }}
+          <span class="cell pending">{{ 'P' | tr }}</span> {{ 'pending' | tr }}
+          <span class="cell weekend"></span> {{ 'weekend' | tr }}
+          <span>{{ '½ half day' | tr }}</span>
         </p>
         <div class="table-scroll">
           <table class="calendar">
-            <caption class="sr-only">Team absences per day</caption>
+            <caption class="sr-only">{{ 'Team absences per day' | tr }}</caption>
             <thead>
               <tr>
-                <th scope="col">Employee</th>
+                <th scope="col">{{ 'Employee' | tr }}</th>
                 @for (d of days(); track d) {
-                  <th scope="col" [attr.aria-label]="d | date: 'fullDate'">{{ d | date: 'd' }}<br /><small>{{ d | date: 'EEEEE' }}</small></th>
+                  <th scope="col" [attr.aria-label]="d | ldate: 'fullDate'">{{ d | ldate: 'd' }}<br /><small>{{ d | ldate: 'EEEEE' }}</small></th>
                 }
               </tr>
             </thead>
@@ -62,13 +62,13 @@ interface Row {
                 <tr>
                   <th scope="row">{{ row.name }}</th>
                   @for (c of row.cells; track c.date) {
-                    <td class="cell {{ c.state }}" [attr.aria-label]="c.state === 'approved' ? 'absent' + (c.half ? ' half day' : '') : c.state === 'pending' ? 'absence pending' + (c.half ? ' half day' : '') : null">
-                      {{ c.state === 'approved' ? 'A' : c.state === 'pending' ? 'P' : '' }}{{ c.half && (c.state === 'approved' || c.state === 'pending') ? '½' : '' }}
+                    <td class="cell {{ c.state }}" [attr.aria-label]="c.state === 'approved' ? ((c.half ? 'absent half day' : 'absent') | tr) : c.state === 'pending' ? ((c.half ? 'absence pending half day' : 'absence pending') | tr) : null">
+                      {{ c.state === 'approved' ? ('A' | tr) : c.state === 'pending' ? ('P' | tr) : '' }}{{ c.half && (c.state === 'approved' || c.state === 'pending') ? '½' : '' }}
                     </td>
                   }
                 </tr>
               } @empty {
-                <tr><td [attr.colspan]="days().length + 1" class="muted">No absences in this period.</td></tr>
+                <tr><td [attr.colspan]="days().length + 1" class="muted">{{ 'No absences in this period.' | tr }}</td></tr>
               }
             </tbody>
           </table>
@@ -79,14 +79,14 @@ interface Row {
     <mat-card appearance="outlined" class="list">
       <mat-card-content>
         <table class="data">
-          <caption>Absences in the period</caption>
-          <thead><tr><th scope="col">Employee</th><th scope="col">From</th><th scope="col">To</th><th scope="col" class="num">Working days</th><th scope="col">Status</th></tr></thead>
+          <caption>{{ 'Absences in the period' | tr }}</caption>
+          <thead><tr><th scope="col">{{ 'Employee' | tr }}</th><th scope="col">{{ 'From' | tr }}</th><th scope="col">{{ 'To' | tr }}</th><th scope="col" class="num">{{ 'Working days' | tr }}</th><th scope="col">{{ 'Status' | tr }}</th></tr></thead>
           <tbody>
             @for (a of absences(); track a.requestId) {
               <tr>
                 <td><a [routerLink]="['/absence', a.requestId]">{{ a.employee.displayName }}</a></td>
-                <td>{{ a.startDate | date: 'mediumDate' }}{{ halfDaySuffix(a.startDayPart) }}</td>
-                <td>{{ a.endDate | date: 'mediumDate' }}{{ halfDaySuffix(a.endDayPart) }}</td>
+                <td>{{ a.startDate | ldate: 'mediumDate' }}{{ halfDaySuffix(a.startDayPart) }}</td>
+                <td>{{ a.endDate | ldate: 'mediumDate' }}{{ halfDaySuffix(a.endDayPart) }}</td>
                 <td class="num">{{ a.workingDays }}</td>
                 <td><ops-status [status]="a.status" /></td>
               </tr>

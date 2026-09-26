@@ -9,23 +9,28 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { describeError } from '../core/api/api-error';
 import { AuthService } from '../core/auth/auth.service';
+import { marker } from '../core/i18n/i18n';
+import { LanguageSwitch } from '../core/i18n/language-switch';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Fictitious demo personas (AGENT.md §55). All use the password demo123. */
 export const DEMO_ACCOUNTS = [
-  { username: 'employee', label: 'Employee' },
-  { username: 'parttime', label: 'Part-time employee' },
-  { username: 'supervisor', label: 'Supervisor' },
-  { username: 'finance', label: 'Financial approver' },
-  { username: 'travel', label: 'Travel office' },
-  { username: 'timeadmin', label: 'Time admin' },
-  { username: 'hradmin', label: 'HR admin' },
-  { username: 'erpadmin', label: 'ERP admin' },
-  { username: 'auditor', label: 'Auditor' },
+  { username: 'employee', label: marker('Employee') },
+  { username: 'parttime', label: marker('Part-time employee') },
+  { username: 'supervisor', label: marker('Supervisor') },
+  { username: 'finance', label: marker('Financial approver') },
+  { username: 'travel', label: marker('Travel office') },
+  { username: 'timeadmin', label: marker('Time admin') },
+  { username: 'hradmin', label: marker('HR admin') },
+  { username: 'erpadmin', label: marker('ERP admin') },
+  { username: 'auditor', label: marker('Auditor') },
 ];
 
 @Component({
   selector: 'ops-login',
   imports: [
+    LanguageSwitch,
+    I18N_PIPES,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,

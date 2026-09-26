@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,16 +10,17 @@ import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { AuditEntry } from '../core/api/models';
 import { humanize } from '../core/format';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Read-only audit log (AGENT.md §20); records cannot be edited through any API. */
 @Component({
   selector: 'ops-audit-log',
-  imports: [DatePipe, JsonPipe, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [I18N_PIPES, JsonPipe, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>Audit log</h1>
-        <p>Append-only; enforced by the database.</p>
+        <h1>{{ 'Audit log' | tr }}</h1>
+        <p>{{ 'Append-only; enforced by the database.' | tr }}</p>
       </div>
     </header>
     @if (error(); as e) {
@@ -27,38 +28,38 @@ import { humanize } from '../core/format';
     }
     <form [formGroup]="filter" (ngSubmit)="search(0)" class="filter">
       <mat-form-field appearance="outline">
-        <mat-label>Entity type</mat-label>
+        <mat-label>{{ 'Entity type' | tr }}</mat-label>
         <input matInput formControlName="entityType" placeholder="AbsenceRequest" />
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Entity ID</mat-label>
+        <mat-label>{{ 'Entity ID' | tr }}</mat-label>
         <input matInput formControlName="entityId" />
       </mat-form-field>
-      <button mat-stroked-button type="submit"><mat-icon>search</mat-icon> Filter</button>
+      <button mat-stroked-button type="submit"><mat-icon>search</mat-icon> {{ 'Filter' | tr }}</button>
     </form>
     <mat-card appearance="outlined">
       <mat-card-content class="table-scroll">
         <table class="data">
-          <caption>{{ total() }} record(s)</caption>
-          <thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Entity</th><th scope="col">Change</th></tr></thead>
+          <caption>{{ '{count} record(s)' | tr: { count: total() } }}</caption>
+          <thead><tr><th scope="col">{{ 'Time' | tr }}</th><th scope="col">{{ 'Actor' | tr }}</th><th scope="col">{{ 'Action' | tr }}</th><th scope="col">{{ 'Entity' | tr }}</th><th scope="col">{{ 'Change' | tr }}</th></tr></thead>
           <tbody>
             @for (a of entries(); track a.id) {
               <tr>
-                <td>{{ a.timestamp | date: 'medium' }}</td>
+                <td>{{ a.timestamp | ldate: 'medium' }}</td>
                 <td>{{ a.actorUsername }}</td>
                 <td>{{ humanize(a.action) }}</td>
                 <td>{{ a.entityType }}<div class="muted small">{{ a.entityId }}</div></td>
                 <td>
                   @if (a.oldValue || a.newValue) {
                     <details>
-                      <summary>Details</summary>
+                      <summary>{{ 'Details' | tr }}</summary>
                       @if (a.oldValue) {
-                        <pre>before: {{ a.oldValue | json }}</pre>
+                        <pre>{{ 'before' | tr }}: {{ a.oldValue | json }}</pre>
                       }
                       @if (a.newValue) {
-                        <pre>after: {{ a.newValue | json }}</pre>
+                        <pre>{{ 'after' | tr }}: {{ a.newValue | json }}</pre>
                       }
-                      <small class="muted">Correlation {{ a.correlationId }}</small>
+                      <small class="muted">{{ 'Correlation' | tr }} {{ a.correlationId }}</small>
                     </details>
                   }
                 </td>
@@ -67,9 +68,9 @@ import { humanize } from '../core/format';
           </tbody>
         </table>
         <div class="actions pager">
-          <button mat-button type="button" [disabled]="page() === 0" (click)="search(page() - 1)">Previous</button>
-          <span>Page {{ page() + 1 }}</span>
-          <button mat-button type="button" [disabled]="(page() + 1) * 50 >= total()" (click)="search(page() + 1)">Next</button>
+          <button mat-button type="button" [disabled]="page() === 0" (click)="search(page() - 1)">{{ 'Previous' | tr }}</button>
+          <span>{{ 'Page {page}' | tr: { page: page() + 1 } }}</span>
+          <button mat-button type="button" [disabled]="(page() + 1) * 50 >= total()" (click)="search(page() + 1)">{{ 'Next' | tr }}</button>
         </div>
       </mat-card-content>
     </mat-card>

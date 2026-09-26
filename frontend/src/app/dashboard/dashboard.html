@@ -1,5 +1,5 @@
 @if (loading()) {
-  <mat-progress-bar mode="indeterminate" aria-label="Loading dashboard" />
+  <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading dashboard' | tr" />
 }
 @if (error(); as message) {
   <p class="error-banner" role="alert"><mat-icon aria-hidden="true">error</mat-icon> {{ message }}</p>
@@ -9,25 +9,25 @@
   <header class="page-header">
     <div>
       <h1>{{ greeting() }}, {{ me.firstName }}</h1>
-      <p>{{ me.displayName }} · {{ me.organisationUnit?.name }} · Personnel no. {{ me.personnelNumber }}</p>
+      <p>{{ me.displayName }} · {{ me.organisationUnit?.name }} · {{ 'Personnel no.' | tr }} {{ me.personnelNumber }}</p>
     </div>
   </header>
 }
 
-<section class="cards" aria-label="Key figures">
+<section class="cards" [attr.aria-label]="'Key figures' | tr">
   @if (isEmployee()) {
     <a class="card-link" routerLink="/absence">
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar aria-hidden="true">beach_access</mat-icon>
-          <mat-card-title>Remaining leave</mat-card-title>
+          <mat-card-title>{{ 'Remaining leave' | tr }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           @if (balance(); as b) {
             <p class="figure">{{ formatDays(b.remainingDays) }}</p>
-            <p class="muted">{{ b.year }} · {{ b.reservedDays }} pending</p>
+            <p class="muted">{{ b.year }} · {{ '{days} pending' | tr: { days: b.reservedDays } }}</p>
           } @else {
-            <p class="muted">No entitlement.</p>
+            <p class="muted">{{ 'No entitlement.' | tr }}</p>
           }
         </mat-card-content>
       </mat-card>
@@ -36,12 +36,12 @@
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar aria-hidden="true">schedule</mat-icon>
-          <mat-card-title>Working-time balance</mat-card-title>
+          <mat-card-title>{{ 'Working-time balance' | tr }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           @if (timeBalance(); as t) {
             <p class="figure" [class.negative]="t.month < 0">{{ formatBalance(t.month) }}</p>
-            <p class="muted">this month · {{ formatBalance(t.year) }} this year</p>
+            <p class="muted">{{ 'this month · {balance} this year' | tr: { balance: formatBalance(t.year) } }}</p>
           }
         </mat-card-content>
       </mat-card>
@@ -49,11 +49,11 @@
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar aria-hidden="true">pending_actions</mat-icon>
-        <mat-card-title>Open requests</mat-card-title>
+        <mat-card-title>{{ 'Open requests' | tr }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p class="figure">{{ openRequests() }}</p>
-        <p class="muted">awaiting a decision</p>
+        <p class="muted">{{ 'awaiting a decision' | tr }}</p>
       </mat-card-content>
     </mat-card>
   }
@@ -61,11 +61,11 @@
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar aria-hidden="true">task_alt</mat-icon>
-        <mat-card-title>Open approval tasks</mat-card-title>
+        <mat-card-title>{{ 'Open approval tasks' | tr }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p class="figure">{{ taskCount() ?? '—' }}</p>
-        <p class="muted">for you to decide</p>
+        <p class="muted">{{ 'for you to decide' | tr }}</p>
       </mat-card-content>
     </mat-card>
   </a>
@@ -73,14 +73,14 @@
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar aria-hidden="true">event_available</mat-icon>
-        <mat-card-title>Upcoming absence</mat-card-title>
+        <mat-card-title>{{ 'Upcoming absence' | tr }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         @if (upcoming(); as u) {
           <p class="figure-sm"><a [routerLink]="['/absence', u.id]">{{ u.leaveType.name }}</a></p>
-          <p>{{ u.startDate | date: 'mediumDate' }} – {{ u.endDate | date: 'mediumDate' }}</p>
+          <p>{{ u.startDate | ldate: 'mediumDate' }} – {{ u.endDate | ldate: 'mediumDate' }}</p>
         } @else {
-          <p class="muted">No approved absence ahead.</p>
+          <p class="muted">{{ 'No approved absence ahead.' | tr }}</p>
         }
       </mat-card-content>
     </mat-card>
@@ -90,16 +90,16 @@
 <div class="grid-2">
   @if (isEmployee()) {
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Recent travel</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Recent travel' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <ul class="plain">
           @for (t of trips().slice(0, 4); track t.id) {
             <li>
-              <a [routerLink]="['/travel', t.id]">{{ t.destinationCity }}</a> · {{ t.startDateTime | date: 'mediumDate' }}
-              · {{ t.estimatedCost | currency: t.currency }} <ops-status [status]="t.status" />
+              <a [routerLink]="['/travel', t.id]">{{ t.destinationCity }}</a> · {{ t.startDateTime | ldate: 'mediumDate' }}
+              · {{ t.estimatedCost | lcurrency: t.currency }} <ops-status [status]="t.status" />
             </li>
           } @empty {
-            <li class="muted">No trips.</li>
+            <li class="muted">{{ 'No trips.' | tr }}</li>
           }
         </ul>
       </mat-card-content>
@@ -107,49 +107,49 @@
   }
 
   <mat-card appearance="outlined">
-    <mat-card-header><mat-card-title><h2>Latest notifications</h2></mat-card-title></mat-card-header>
+    <mat-card-header><mat-card-title><h2>{{ 'Latest notifications' | tr }}</h2></mat-card-title></mat-card-header>
     <mat-card-content>
       <ul class="plain">
         @for (n of notifications(); track n.id) {
-          <li [class.unread]="!n.read"><strong>{{ n.subject }}</strong> <span class="muted">· {{ n.createdAt | date: 'short' }}</span><br />{{ n.message }}</li>
+          <li [class.unread]="!n.read"><strong>{{ n.subject }}</strong> <span class="muted">· {{ n.createdAt | ldate: 'short' }}</span><br />{{ n.message }}</li>
         } @empty {
-          <li class="muted">Nothing new.</li>
+          <li class="muted">{{ 'Nothing new.' | tr }}</li>
         }
       </ul>
-      <a mat-button routerLink="/notifications">All notifications</a>
+      <a mat-button routerLink="/notifications">{{ 'All notifications' | tr }}</a>
     </mat-card-content>
   </mat-card>
 
   @if (isSupervisor()) {
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Team absences (next 2 weeks)</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Team absences (next 2 weeks)' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <ul class="plain">
           @for (a of team(); track a.requestId) {
-            <li>{{ a.employee.displayName }} · {{ a.startDate | date: 'd MMM' }} – {{ a.endDate | date: 'd MMM' }} <ops-status [status]="a.status" /></li>
+            <li>{{ a.employee.displayName }} · {{ a.startDate | ldate: 'd MMM' }} – {{ a.endDate | ldate: 'd MMM' }} <ops-status [status]="a.status" /></li>
           } @empty {
-            <li class="muted">Everyone is in.</li>
+            <li class="muted">{{ 'Everyone is in.' | tr }}</li>
           }
         </ul>
-        <a mat-button routerLink="/team/calendar">Team calendar</a>
+        <a mat-button routerLink="/team/calendar">{{ 'Team calendar' | tr }}</a>
       </mat-card-content>
     </mat-card>
   }
 
   @if (isHr()) {
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>HR overview</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'HR overview' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <p class="figure">{{ pendingApprovals() ?? '—' }}</p>
-        <p class="muted">approvals pending across the university</p>
-        <a mat-button routerLink="/reports">Reports</a>
+        <p class="muted">{{ 'approvals pending across the university' | tr }}</p>
+        <a mat-button routerLink="/reports">{{ 'Reports' | tr }}</a>
       </mat-card-content>
     </mat-card>
   }
 
   @if (isOperator() && health(); as h) {
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>System health</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'System health' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <ul class="plain">
           @for (c of h.components | keyvalue; track c.key) {
@@ -157,25 +157,25 @@
           }
         </ul>
         <p>
-          <strong [class.negative]="h.openIntegrationErrors > 0">{{ h.openIntegrationErrors }}</strong> open integration errors ·
-          <strong [class.negative]="h.failedBatchRunsLast24h > 0">{{ h.failedBatchRunsLast24h }}</strong> failed batch runs (24 h) ·
-          <strong>{{ h.pendingExports }}</strong> pending exports
+          <strong [class.negative]="h.openIntegrationErrors > 0">{{ h.openIntegrationErrors }}</strong> {{ 'open integration errors' | tr }} ·
+          <strong [class.negative]="h.failedBatchRunsLast24h > 0">{{ h.failedBatchRunsLast24h }}</strong> {{ 'failed batch runs (24 h)' | tr }} ·
+          <strong>{{ h.pendingExports }}</strong> {{ 'pending exports' | tr }}
         </p>
         <div class="actions">
-          <a mat-button routerLink="/admin/integrations">Integration monitor</a>
-          <a mat-button routerLink="/admin/batch">Batch jobs</a>
+          <a mat-button routerLink="/admin/integrations">{{ 'Integration monitor' | tr }}</a>
+          <a mat-button routerLink="/admin/batch">{{ 'Batch jobs' | tr }}</a>
         </div>
       </mat-card-content>
     </mat-card>
     <mat-card appearance="outlined">
-      <mat-card-header><mat-card-title><h2>Recent audit activity</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'Recent audit activity' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content>
         <ul class="plain">
           @for (a of audit(); track a.id) {
-            <li>{{ a.timestamp | date: 'short' }} · {{ a.actorUsername }} · {{ humanize(a.action) }}</li>
+            <li>{{ a.timestamp | ldate: 'short' }} · {{ a.actorUsername }} · {{ humanize(a.action) }}</li>
           }
         </ul>
-        <a mat-button routerLink="/admin/audit">Audit log</a>
+        <a mat-button routerLink="/admin/audit">{{ 'Audit log' | tr }}</a>
       </mat-card-content>
     </mat-card>
   }

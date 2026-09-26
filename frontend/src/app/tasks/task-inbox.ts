@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,21 +10,23 @@ import { describeError } from '../core/api/api-error';
 import { Decision, Task } from '../core/api/models';
 import { humanize } from '../core/format';
 import { askDecision } from '../shared/decision-dialog';
+import { tr } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Generic task inbox (AGENT.md §17): every approval waiting for the user, incl. delegated ones. */
 @Component({
   selector: 'ops-task-inbox',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule],
+  imports: [I18N_PIPES, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>My tasks</h1>
-        <p>Approvals assigned to you, to one of your roles, or delegated to you.</p>
+        <h1>{{ 'My tasks' | tr }}</h1>
+        <p>{{ 'Approvals assigned to you, to one of your roles, or delegated to you.' | tr }}</p>
       </div>
-      <a mat-stroked-button routerLink="/delegations"><mat-icon>swap_horiz</mat-icon> Delegations</a>
+      <a mat-stroked-button routerLink="/delegations"><mat-icon>swap_horiz</mat-icon> {{ 'Delegations' | tr }}</a>
     </header>
     @if (loading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Loading' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
@@ -33,14 +34,14 @@ import { askDecision } from '../shared/decision-dialog';
     <mat-card appearance="outlined">
       <mat-card-content class="table-scroll">
         <table class="data">
-          <caption>{{ tasks().length }} open task(s)</caption>
+          <caption>{{ '{count} open task(s)' | tr: { count: tasks().length } }}</caption>
           <thead>
             <tr>
-              <th scope="col">Task</th>
-              <th scope="col">Requested by</th>
-              <th scope="col">Since</th>
-              <th scope="col">Due</th>
-              <th scope="col">Actions</th>
+              <th scope="col">{{ 'Task' | tr }}</th>
+              <th scope="col">{{ 'Requested by' | tr }}</th>
+              <th scope="col">{{ 'Since' | tr }}</th>
+              <th scope="col">{{ 'Due' | tr }}</th>
+              <th scope="col">{{ 'Actions' | tr }}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,22 +51,22 @@ import { askDecision } from '../shared/decision-dialog';
                   <a [routerLink]="link(t)">{{ t.title }}</a>
                   <div class="muted small">{{ t.description }}</div>
                   @if (t.viaDelegationFrom) {
-                    <div class="small"><mat-icon class="inline" aria-hidden="true">swap_horiz</mat-icon> Delegated to you by {{ t.assignedEmployeeName }}</div>
+                    <div class="small"><mat-icon class="inline" aria-hidden="true">swap_horiz</mat-icon> {{ 'Delegated to you by {name}' | tr: { name: t.assignedEmployeeName } }}</div>
                   } @else if (!t.assignedEmployeeId) {
-                    <div class="small muted">For all {{ humanize(t.assignedRole) }}</div>
+                    <div class="small muted">{{ 'For all {role}' | tr: { role: humanize(t.assignedRole) } }}</div>
                   }
                 </td>
                 <td>{{ t.requesterName }}</td>
-                <td>{{ t.createdAt | date: 'mediumDate' }}</td>
-                <td [class.negative]="overdue(t)">{{ t.dueDate | date: 'mediumDate' }}{{ overdue(t) ? ' (overdue)' : '' }}</td>
+                <td>{{ t.createdAt | ldate: 'mediumDate' }}</td>
+                <td [class.negative]="overdue(t)">{{ t.dueDate | ldate: 'mediumDate' }}{{ overdue(t) ? ' (overdue)' : '' }}</td>
                 <td class="actions">
-                  <button mat-flat-button type="button" (click)="decide(t, 'APPROVE')" [disabled]="busy()">Approve</button>
-                  <button mat-stroked-button type="button" (click)="decide(t, 'RETURN_FOR_CORRECTION')" [disabled]="busy()">Return</button>
-                  <button mat-stroked-button type="button" (click)="decide(t, 'REJECT')" [disabled]="busy()">Reject</button>
+                  <button mat-flat-button type="button" (click)="decide(t, 'APPROVE')" [disabled]="busy()">{{ 'Approve' | tr }}</button>
+                  <button mat-stroked-button type="button" (click)="decide(t, 'RETURN_FOR_CORRECTION')" [disabled]="busy()">{{ 'Return' | tr }}</button>
+                  <button mat-stroked-button type="button" (click)="decide(t, 'REJECT')" [disabled]="busy()">{{ 'Reject' | tr }}</button>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="5" class="muted">Nothing to do. 🎉</td></tr>
+              <tr><td colspan="5" class="muted">{{ 'Nothing to do. 🎉' | tr }}</td></tr>
             }
           </tbody>
         </table>
@@ -110,7 +111,7 @@ export class TaskInbox {
   }
 
   protected async decide(t: Task, decision: Decision): Promise<void> {
-    const label = decision === 'APPROVE' ? 'Approve' : decision === 'REJECT' ? 'Reject' : 'Return';
+    const label = tr(decision === 'APPROVE' ? 'Approve' : decision === 'REJECT' ? 'Reject' : 'Return');
     const result = await askDecision(this.dialog, {
       title: `${label}: ${t.title}?`,
       message: t.description,

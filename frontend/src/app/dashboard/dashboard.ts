@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, KeyValuePipe } from '@angular/common';
+import { KeyValuePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -21,11 +21,13 @@ import { AuthService } from '../core/auth/auth.service';
 import { formatBalance, formatDays, humanize, isoDate } from '../core/format';
 import { EmployeeApi } from '../profile/employee-api.service';
 import { StatusChip } from '../shared/status-chip';
+import { tr } from '../core/i18n/i18n';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Role-aware dashboard (AGENT.md §12, §41). Each block loads independently. */
 @Component({
   selector: 'ops-dashboard',
-  imports: [CurrencyPipe, DatePipe, KeyValuePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
+  imports: [I18N_PIPES, KeyValuePipe, RouterLink, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -55,7 +57,7 @@ export class Dashboard {
 
   protected readonly greeting = computed(() => {
     const hour = new Date().getHours();
-    return hour < 11 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    return tr(hour < 11 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
   });
   protected readonly openRequests = computed(
     () =>

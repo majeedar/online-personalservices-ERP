@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,17 +7,18 @@ import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { AppNotification } from '../core/api/models';
 import { NotificationBadge } from './notification-badge.service';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 @Component({
   selector: 'ops-notifications',
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule],
+  imports: [I18N_PIPES, MatButtonModule, MatCardModule, MatIconModule],
   template: `
     <header class="page-header">
       <div>
-        <h1>Notifications</h1>
-        <p>Also sent by e-mail when mail delivery is enabled.</p>
+        <h1>{{ 'Notifications' | tr }}</h1>
+        <p>{{ 'Also sent by e-mail when mail delivery is enabled.' | tr }}</p>
       </div>
-      <button mat-stroked-button type="button" (click)="readAll()"><mat-icon>done_all</mat-icon> Mark all read</button>
+      <button mat-stroked-button type="button" (click)="readAll()"><mat-icon>done_all</mat-icon> {{ 'Mark all read' | tr }}</button>
     </header>
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
@@ -33,15 +33,15 @@ import { NotificationBadge } from './notification-badge.service';
                 <button type="button" class="link" (click)="open(n)">
                   <strong>{{ n.subject }}</strong>
                   @if (!n.read) {
-                    <span class="sr-only">(unread)</span>
+                    <span class="sr-only">{{ '(unread)' | tr }}</span>
                   }
                 </button>
                 <p>{{ n.message }}</p>
-                <small class="muted">{{ n.createdAt | date: 'medium' }}</small>
+                <small class="muted">{{ n.createdAt | ldate: 'medium' }}</small>
               </div>
             </li>
           } @empty {
-            <li class="muted">No notifications.</li>
+            <li class="muted">{{ 'No notifications.' | tr }}</li>
           }
         </ul>
       </mat-card-content>

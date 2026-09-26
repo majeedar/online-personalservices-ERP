@@ -167,6 +167,10 @@ Dependencies point inward: `api → application → domain ← persistence / int
 **Decision:** A request has a `startDayPart` and an `endDayPart` (`FULL`, `MORNING`, `AFTERNOON`). A single day is a full day, a morning or an afternoon. A longer absence may start at noon and end at noon, and every day in between is a full day. A half working day deducts 0.5 days and plans and credits half the day's target. Two requests may share a date only if one covers the morning and the other the afternoon. The time module adds up the minutes of both.
 **Why:** This covers what people actually request (a half day off, leaving at noon before a trip) without hourly leave. Hourly leave would need a different entitlement unit and times of day in the time account.
 
+### ADR-019 German/English interface with a runtime switch
+**Decision:** The SPA translates at runtime. `core/i18n` holds the language as a signal, `tr()` and the impure `tr` pipe, and `ldate` / `lcurrency` pipes that format in the current locale. English source texts are the keys, and German lives in `de.json`. A missing entry falls back to English, and `npm run i18n:check` (run in CI) fails if any text passed to `tr` has no German entry. Enum codes are shown via `humanize()`, which uses `enum.<CODE>` entries. Known error codes use `error.<CODE>` entries; otherwise the server message is shown as sent. The choice is stored in `localStorage`, and the default follows the browser language.
+**Why:** Angular's built-in i18n compiles one bundle per locale, so switching needs a reload and a separate URL per language, and the build doubles. English keys keep templates readable and make a missing translation harmless. Server-generated texts (notifications, task titles) stay English. Translating them would need the recipient's language in the backend, which the prototype does not store.
+
 ## 6. Security model (summary — details in [security.md](security.md))
 
 | Layer | Mechanism |

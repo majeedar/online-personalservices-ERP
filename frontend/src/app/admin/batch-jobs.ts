@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,20 +8,21 @@ import { describeError } from '../core/api/api-error';
 import { BatchJobInfo, BatchRun } from '../core/api/models';
 import { AuthService } from '../core/auth/auth.service';
 import { StatusChip } from '../shared/status-chip';
+import { I18N_PIPES } from '../core/i18n/pipes';
 
 /** Batch jobs and their history (AGENT.md §27, §28 "Admin UI must display batch history"). */
 @Component({
   selector: 'ops-batch-jobs',
-  imports: [DatePipe, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
+  imports: [I18N_PIPES, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, StatusChip],
   template: `
     <header class="page-header">
       <div>
-        <h1>Batch jobs</h1>
-        <p>Scheduled jobs are idempotent and can also be started manually.</p>
+        <h1>{{ 'Batch jobs' | tr }}</h1>
+        <p>{{ 'Scheduled jobs are idempotent and can also be started manually.' | tr }}</p>
       </div>
     </header>
     @if (running()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Job running" />
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'Job running' | tr" />
     }
     @if (error(); as e) {
       <p class="error-banner" role="alert">{{ e }}</p>
@@ -33,23 +33,23 @@ import { StatusChip } from '../shared/status-chip';
     <mat-card appearance="outlined">
       <mat-card-content class="table-scroll">
         <table class="data">
-          <caption>Jobs</caption>
-          <thead><tr><th scope="col">Job</th><th scope="col">Schedule</th><th scope="col">Last run</th><th scope="col"></th></tr></thead>
+          <caption>{{ 'Jobs' | tr }}</caption>
+          <thead><tr><th scope="col">{{ 'Job' | tr }}</th><th scope="col">{{ 'Schedule' | tr }}</th><th scope="col">{{ 'Last run' | tr }}</th><th scope="col"></th></tr></thead>
           <tbody>
             @for (j of jobs(); track j.name) {
               <tr>
                 <td><strong>{{ j.name }}</strong><div class="muted">{{ j.description }}</div></td>
-                <td><code>{{ j.schedule || 'manual' }}</code></td>
+                <td><code>{{ j.schedule || ('manual' | tr) }}</code></td>
                 <td>
                   @if (j.lastRun; as r) {
-                    <ops-status [status]="r.status" /> {{ r.startedAt | date: 'short' }} · {{ r.successfulRecords }}/{{ r.processedRecords }}
+                    <ops-status [status]="r.status" /> {{ r.startedAt | ldate: 'short' }} · {{ r.successfulRecords }}/{{ r.processedRecords }}
                   } @else {
-                    <span class="muted">never</span>
+                    <span class="muted">{{ 'never' | tr }}</span>
                   }
                 </td>
                 <td>
                   @if (canRun()) {
-                    <button mat-stroked-button type="button" (click)="run(j.name)" [disabled]="running()"><mat-icon>play_arrow</mat-icon> Run now</button>
+                    <button mat-stroked-button type="button" (click)="run(j.name)" [disabled]="running()"><mat-icon>play_arrow</mat-icon> {{ 'Run now' | tr }}</button>
                   }
                 </td>
               </tr>
@@ -60,24 +60,24 @@ import { StatusChip } from '../shared/status-chip';
     </mat-card>
 
     <mat-card appearance="outlined" class="history">
-      <mat-card-header><mat-card-title><h2>History</h2></mat-card-title></mat-card-header>
+      <mat-card-header><mat-card-title><h2>{{ 'History' | tr }}</h2></mat-card-title></mat-card-header>
       <mat-card-content class="table-scroll">
         <table class="data">
           <thead>
-            <tr><th scope="col">Started</th><th scope="col">Job</th><th scope="col">Trigger</th><th scope="col">Status</th><th scope="col" class="num">Processed</th><th scope="col" class="num">Failed</th><th scope="col"></th></tr>
+            <tr><th scope="col">{{ 'Started' | tr }}</th><th scope="col">{{ 'Job' | tr }}</th><th scope="col">{{ 'Trigger' | tr }}</th><th scope="col">{{ 'Status' | tr }}</th><th scope="col" class="num">{{ 'Processed' | tr }}</th><th scope="col" class="num">{{ 'Failed' | tr }}</th><th scope="col"></th></tr>
           </thead>
           <tbody>
             @for (r of runs(); track r.id) {
               <tr>
-                <td>{{ r.startedAt | date: 'medium' }}</td>
+                <td>{{ r.startedAt | ldate: 'medium' }}</td>
                 <td>{{ r.jobName }}</td>
-                <td>{{ r.trigger === 'MANUAL' ? 'manual (' + r.startedBy + ')' : 'scheduled' }}</td>
+                <td>{{ r.trigger === 'MANUAL' ? ('manual ({name})' | tr: { name: r.startedBy }) : ('scheduled' | tr) }}</td>
                 <td><ops-status [status]="r.status" /></td>
                 <td class="num">{{ r.processedRecords }}</td>
                 <td class="num">{{ r.failedRecords }}</td>
                 <td>
                   @if (r.failedRecords > 0) {
-                    <button mat-button type="button" (click)="showErrors(r)">{{ selected() === r.id ? 'Hide' : 'Errors' }}</button>
+                    <button mat-button type="button" (click)="showErrors(r)">{{ (selected() === r.id ? 'Hide' : 'Errors') | tr }}</button>
                   }
                 </td>
               </tr>
