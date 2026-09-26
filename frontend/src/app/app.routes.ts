@@ -43,6 +43,7 @@ export const routes: Routes = [
       { path: 'notifications', title: title('Notifications'), loadComponent: () => import('./notifications/notifications').then((m) => m.Notifications) },
 
       { path: 'reports', title: title('Reports'), data: roles(...REPORT_READERS), loadComponent: () => import('./admin/reports').then((m) => m.Reports) },
+      { path: 'admin/month-closing', title: title('Month closing'), data: roles('TIME_ADMIN', 'HR_ADMIN'), loadComponent: () => import('./admin/month-closing').then((m) => m.MonthClosing) },
       { path: 'admin/batch', title: title('Batch jobs'), data: roles(...OPERATORS, 'AUDITOR'), loadComponent: () => import('./admin/batch-jobs').then((m) => m.BatchJobs) },
       { path: 'admin/integrations', title: title('Integration monitor'), data: roles(...OPERATORS, 'AUDITOR'), loadComponent: () => import('./admin/integration-monitor').then((m) => m.IntegrationMonitor) },
       { path: 'admin/audit', title: title('Audit log'), data: roles(...OPERATORS, 'AUDITOR'), loadComponent: () => import('./admin/audit-log').then((m) => m.AuditLog) },

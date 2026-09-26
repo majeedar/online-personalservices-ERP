@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -59,6 +60,10 @@ public class TimeClockService {
      */
     public TimeEntry record(UUID employeeId, Instant at, TimeEntry.Type type, TimeEntry.Source source) {
         LocalDate date = businessDateFor(employeeId, at);
+        if (accounts.isClosed(date)) {
+            throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED,
+                    "The time accounts for " + YearMonth.from(date) + " are closed.");
+        }
         List<TimeEntry> day = activeEntries(employeeId, date);
         State state = TimeSequence.stateAfter(events(day));
         if (state == null || TimeSequence.next(state, type) == null) {

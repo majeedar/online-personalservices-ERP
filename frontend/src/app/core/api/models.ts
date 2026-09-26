@@ -441,6 +441,17 @@ export interface TimeCorrection {
   actionableTaskId?: string;
 }
 
+export interface MonthClosingStatus {
+  month: string; // YYYY-MM
+  closed: boolean;
+  closedAt?: string;
+  closedBy?: string;
+  employees: number;
+  pendingCorrections: number;
+  closable: boolean;
+  blockedReason?: string;
+}
+
 // ------------------------------------------------------------------- admin
 
 export interface BatchRun {

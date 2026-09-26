@@ -100,6 +100,18 @@ stateDiagram-v2
     WORKING --> OFF: CLOCK_OUT
 ```
 
+## Monthly closing
+
+A `TIME_ADMIN` or `HR_ADMIN` closes a past month for the whole university (**Administration › Month Closing**, or the `time-month-closing` job on the 10th for the previous month).
+
+- **Preconditions:** the month is in the past, is not already closed, and has no pending time corrections. Otherwise the result is `422 TIME_MONTH_NOT_CLOSABLE` with the reason; the job run then ends FAILED and alerts the admins.
+- **Effect:** every active employee's days are recalculated one last time and frozen (`time_account_day.status = CLOSED`). The frozen values are served from then on.
+- **While closed:**
+  - corrections (at request *and* at approval) and backdated bookings are rejected with `409 TIME_MONTH_CLOSED`;
+  - recalculation leaves the month untouched;
+  - if an approved or cancelled absence touches a closed month, time admins are notified to decide whether to reopen it.
+- **Reopen:** requires a reason, is audited, and unfreezes and recalculates the month. Closing history is kept (`time_month_closing` rows: CLOSED / REOPENED).
+
 The daily account is: `credited = worked + credited absence`, `balance = credited − target`.
 - Recorded breaks are not working time.
 - The statutory minimum break is enforced: more than 6 hours of work need 30 minutes, more than 9 hours need 45 minutes. A shortfall is deducted (`ops.time.statutory-breaks`).

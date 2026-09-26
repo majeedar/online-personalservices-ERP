@@ -25,6 +25,7 @@
 - `FoundationIntegrationTest`: migrations and seed, login and CSRF, error format and correlation IDs, audit trigger;
 - `AbsenceScenarioTest`: Scenarios 1 and 2, all validation rules, return, reject, cancellation, sick leave, delegation, concurrency;
 - `TimeScenarioTest`: Scenarios 5 and 6, absence credit;
+- `TimeClosingTest`: monthly closing: guards, frozen days, rejected corrections, reopening, scheduler idempotency, permissions;
 - `TravelScenarioTest`: Scenarios 3, 4 and 7, funding, cost centre, outage and retry, idempotency;
 - `OperationsTest`: organisation, employee, supervisor and schedule sync; entitlement and time jobs; reminders; health; reports.
 
@@ -43,6 +44,7 @@
 - travel form validation and funding total (`travel-form.spec.ts`);
 - time-action button state (`time-today.spec.ts`);
 - task approval flow (`task-inbox.spec.ts`);
+- month closing (`month-closing.spec.ts`);
 - route guard and role-aware menu (`auth.guard.spec.ts`, `navigation.spec.ts`).
 
 ## Determinism

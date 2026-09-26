@@ -155,6 +155,10 @@ Dependencies point inward: `api → application → domain ← persistence / int
 ### ADR-015 Two integration modes
 **Decision:** Every port has an in-memory **stub** adapter and an **HTTP** adapter to `mock-erp`, selected by `ops.integration.mode`. Stub mode keeps tests and local development free of external processes, and supports the same simulated outages. Docker Compose runs HTTP mode. Adapters live in the module that owns the port. `shared/integration` holds only cross-cutting infrastructure: runs, errors, retry, outbox, HTTP client, correlation propagation.
 
+### ADR-016 Monthly closing freezes time accounts
+**Decision:** Closing a month recalculates and then freezes every day of it (`time_account_day.status = CLOSED`). The stored values become authoritative, and corrections and backdated bookings are rejected until the month is reopened (with a reason, audited). Absence changes that touch a closed month are not applied automatically; time admins are notified instead.
+**Why:** Payroll and reporting need stable monthly figures. A derived-only model (ADR-014) would silently change closed figures whenever an input changed.
+
 ## 6. Security model (summary — details in [security.md](security.md))
 
 | Layer | Mechanism |

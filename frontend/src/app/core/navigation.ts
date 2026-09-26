@@ -51,6 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Notifications', icon: 'notifications', route: '/notifications', section: 'Self-service', roles: ALL_STAFF, available: true },
   { label: 'Team Calendar', icon: 'calendar_month', route: '/team/calendar', section: 'Team', roles: ['SUPERVISOR'], available: true },
   { label: 'Delegations', icon: 'swap_horiz', route: '/delegations', section: 'Team', roles: ['SUPERVISOR', 'FINANCIAL_APPROVER', 'HR_ADMIN'], available: true },
+  { label: 'Month Closing', icon: 'lock_clock', route: '/admin/month-closing', section: 'Administration', roles: ['TIME_ADMIN', 'HR_ADMIN'], available: true },
   { label: 'Reports', icon: 'summarize', route: '/reports', section: 'Administration', roles: REPORT_READERS, available: true },
   { label: 'Batch Jobs', icon: 'sync', route: '/admin/batch', section: 'Administration', roles: [...OPERATORS, 'AUDITOR'], available: true },
   { label: 'Integration Monitor', icon: 'hub', route: '/admin/integrations', section: 'Administration', roles: [...OPERATORS, 'AUDITOR'], available: true },

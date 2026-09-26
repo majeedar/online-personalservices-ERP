@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -37,6 +37,9 @@ import { CorrectionDialog } from './correction-dialog';
       <p class="error-banner" role="alert">{{ e }}</p>
     }
     @if (month(); as m) {
+      @if (closed()) {
+        <p class="info-banner" role="status"><mat-icon aria-hidden="true">lock</mat-icon> This month is closed. Its accounts are final; ask a time administrator if something must still be corrected.</p>
+      }
       <section class="cards" aria-label="Month totals">
         <div class="total"><span class="muted">Target</span><strong>{{ formatMinutes(m.totals.targetMinutes) }}</strong></div>
         <div class="total"><span class="muted">Worked</span><strong>{{ formatMinutes(m.totals.workedMinutes) }}</strong></div>
@@ -76,7 +79,7 @@ import { CorrectionDialog } from './correction-dialog';
                     }
                   </td>
                   <td>
-                    @if (!d.future && d.status !== 'CORRECTION_PENDING') {
+                    @if (!d.future && d.status !== 'CORRECTION_PENDING' && d.status !== 'CLOSED') {
                       <button mat-button type="button" (click)="correct(d.date)">Correct</button>
                     }
                   </td>
@@ -123,6 +126,7 @@ export class TimeMonth {
   protected readonly monthStart = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   protected readonly month = signal<Month | null>(null);
   protected readonly corrections = signal<TimeCorrection[]>([]);
+  protected readonly closed = computed(() => this.month()?.days.some((d) => d.status === 'CLOSED') ?? false);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly formatMinutes = formatMinutes;

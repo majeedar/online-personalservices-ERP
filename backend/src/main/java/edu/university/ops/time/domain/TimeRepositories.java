@@ -58,6 +58,22 @@ public final class TimeRepositories {
                                                                           TimeCorrectionRequest.Status status,
                                                                           LocalDate from, LocalDate to);
 
+        long countByStatusAndDateBetween(TimeCorrectionRequest.Status status, LocalDate from, LocalDate to);
+
+        long count();
+    }
+
+    public interface TimeMonthClosingRepository {
+        TimeMonthClosing save(TimeMonthClosing closing);
+
+        TimeMonthClosing saveAndFlush(TimeMonthClosing closing);
+
+        Optional<TimeMonthClosing> findByYearMonthAndStatus(String yearMonth, TimeMonthClosing.Status status);
+
+        List<TimeMonthClosing> findByStatus(TimeMonthClosing.Status status);
+
+        List<TimeMonthClosing> findByYearMonthOrderByClosedAtDesc(String yearMonth);
+
         long count();
     }
 }

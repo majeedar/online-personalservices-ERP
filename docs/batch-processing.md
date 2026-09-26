@@ -10,6 +10,7 @@ Batch jobs implement `shared.batch.BatchJob` in the module that owns the data. `
 | `work-schedule-sync` | 02:30 daily | employee | Changed part-time patterns → new schedule from today; the previous one is end-dated |
 | `leave-entitlement-calculation` | 03:00 on 1 January | absence | Create missing yearly entitlements (pro rata, carry-over up to 10 days, expiring 31 March); recompute used/reserved from absence days. Also runs per employee on `EmployeeMasterDataChanged`. |
 | `time-account-recalculation` | 01:00 daily | time | Recalculate the last 7 days of every active employee's time account |
+| `time-month-closing` | 04:00 on the 10th | time | Close the previous month's time accounts (freeze); FAILED with the reason if corrections are still pending |
 | `workflow-reminder` | 07:00 Mon–Fri | shared/workflow | Remind approvers (and delegates / role holders) of tasks older than `reminder-after-days` |
 | `integration-retry` | every 15 min | shared/integration | Deliver outbox exports whose backoff has elapsed |
 

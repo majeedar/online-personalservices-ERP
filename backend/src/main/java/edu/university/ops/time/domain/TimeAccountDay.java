@@ -59,6 +59,16 @@ public class TimeAccountDay {
         this.calculatedAt = now;
     }
 
+    /** Freezes the day as part of a monthly closing. */
+    public void close(Instant now) {
+        this.status = Status.CLOSED;
+        this.calculatedAt = now;
+    }
+
+    public boolean isClosed() {
+        return status == Status.CLOSED;
+    }
+
     public UUID getId() {
         return id;
     }

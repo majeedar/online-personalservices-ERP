@@ -3327,6 +3327,7 @@ At every stage, keep the application runnable.
 - ADR-013 Reporting is the top-level module `reporting`, not `shared/reporting`: it reads several business modules, and `shared` must not depend on them.
 - ADR-014 A time account starts with the employee's first booking; earlier days do not count towards the balance.
 - ADR-015 Every integration port has a stub adapter (tests, local development) and an HTTP adapter (mock-erp), selected by `ops.integration.mode`; adapters live in the module owning the port.
+- ADR-016 Monthly closing freezes a month's time accounts; corrections are rejected until it is reopened (reason required, audited).
 
 ---
 

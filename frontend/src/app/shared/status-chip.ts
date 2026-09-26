@@ -23,6 +23,7 @@ const TONES: Record<string, { tone: Tone; icon: string }> = {
   PROCESSED: { tone: 'approved', icon: 'check_circle' },
   COMPLETED: { tone: 'completed', icon: 'task_alt' },
   SETTLED: { tone: 'completed', icon: 'paid' },
+  CLOSED: { tone: 'completed', icon: 'lock' },
   REJECTED: { tone: 'rejected', icon: 'cancel' },
   RETURNED: { tone: 'rejected', icon: 'undo' },
   FAILED: { tone: 'failed', icon: 'error' },

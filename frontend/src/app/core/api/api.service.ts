@@ -21,6 +21,7 @@ import {
   IntegrationRunInfo,
   LeaveBalance,
   LeaveType,
+  MonthClosingStatus,
   Page,
   Report,
   ReportInfo,
@@ -212,6 +213,18 @@ export class Api {
 
   correctionAction(id: string, action: 'approve' | 'reject', comment?: string): Promise<TimeCorrection> {
     return this.post(`/api/v1/time/corrections/${id}/${action}`, comment ? { comment } : {});
+  }
+
+  monthClosings(): Promise<MonthClosingStatus[]> {
+    return this.get('/api/v1/time/closings');
+  }
+
+  closeMonth(month: string): Promise<unknown> {
+    return this.post(`/api/v1/time/closings/${month}/close`);
+  }
+
+  reopenMonth(month: string, reason: string): Promise<unknown> {
+    return this.post(`/api/v1/time/closings/${month}/reopen`, { reason });
   }
 
   // ---------------------------------------------------- tasks, delegation

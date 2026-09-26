@@ -27,6 +27,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -88,6 +89,7 @@ public class TimeCorrectionService {
         if (input.date() == null || input.date().isAfter(today)) {
             throw new BusinessException(ErrorCode.VALIDATION_FAILED, "Corrections are possible for past days only.");
         }
+        requireOpenMonth(input.date());
         if (input.operation() == null || !StringUtils.hasText(input.reason())) {
             throw new BusinessException(ErrorCode.VALIDATION_FAILED, "Operation and reason are required.");
         }
@@ -173,7 +175,8 @@ public class TimeCorrectionService {
         TimeCorrectionRequest request = corrections.findById(event.businessObjectId()).orElseThrow();
         Instant now = Instant.now(clock);
         if (event.outcome() == InstanceStatus.APPROVED) {
-            // Re-validate: the day's entries may have changed since the request was made.
+            // Re-validate: the day's entries or the month's closing may have changed since the request.
+            requireOpenMonth(request.getDate());
             requireValidResult(request);
             Map<String, Object> before = Map.of("entries", describeEntries(active(request)));
             apply(request, now);
@@ -210,6 +213,14 @@ public class TimeCorrectionService {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    private void requireOpenMonth(LocalDate date) {
+        if (accounts.isClosed(date)) {
+            throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED,
+                    "The time accounts for " + YearMonth.from(date)
+                            + " are closed. Ask a time administrator to reopen the month.");
+        }
+    }
 
     private void apply(TimeCorrectionRequest r, Instant now) {
         if (r.getOperation() != Operation.ADD) {

@@ -110,6 +110,7 @@ ops:
       work-schedule-sync: "0 30 2 * * *"
       leave-entitlement-calculation: "0 0 3 1 1 *"
       time-account-recalculation: "0 0 1 * * *"
+      time-month-closing: "0 0 4 10 * *"
       workflow-reminder: "0 0 7 * * MON-FRI"
       integration-retry: "0 */15 * * * *"
 

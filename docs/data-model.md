@@ -8,6 +8,7 @@ PostgreSQL 17. The schema is created by Flyway migrations in [backend/src/main/r
 | `V2__workflow_notification_absence.sql` | workflow engine, delegation, notifications, leave types, entitlements, absence requests and days, documents |
 | `V3__time.sql` | time entries, daily time accounts, time corrections |
 | `V4__travel_integration_batch.sql` | funding sources, travel requests, fundings, expenses, integration runs/errors, outbox, batch runs/errors |
+| `V5__time_month_closing.sql` | monthly closing of time accounts (one active closing per month, history kept) |
 
 Demo data is loaded only by the `demo` profile (`db/seed/R__*.sql`, repeatable and idempotent), see ADR-009.
 
@@ -76,7 +77,7 @@ erDiagram
 | employee | `employee`, `employment`, `work_schedule`, `work_schedule_day`, `role`, `user_role`, `approval_relation` |
 | calendar | `holiday` |
 | absence | `leave_type`, `leave_entitlement`, `absence_request`, `absence_day` |
-| time | `time_entry`, `time_account_day`, `time_correction_request` |
+| time | `time_entry`, `time_account_day`, `time_correction_request`, `time_month_closing` |
 | travel | `funding_source`, `travel_request`, `travel_funding`, `travel_expense` |
 | shared/workflow | `workflow_definition`, `workflow_instance`, `workflow_step`, `approval_decision`, `user_task`, `delegation` |
 | shared/notification | `notification` |

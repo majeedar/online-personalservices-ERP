@@ -52,10 +52,10 @@ All phases of [AGENT.md §73](AGENT.md) are implemented:
 | 1 Foundation | Repository, Docker, PostgreSQL + Flyway, demo login (mock SSO), error handling, correlation IDs |
 | 2 Master data | Employees, employments, organisation, roles, approval relations, work schedules, seed data |
 | 3 Absence | Leave types, entitlement ledger, work-schedule-aware day calculation, workflow, delegation, notifications, cancellation, attachments, team calendar |
-| 4 Time | Clock in/out and breaks, daily accounts (statutory breaks, absence credit), monthly overview, corrections with approval |
+| 4 Time | Clock in/out and breaks, daily accounts (statutory breaks, absence credit), monthly overview, corrections with approval, monthly closing |
 | 5 Travel | Requests, split funding, supervisor + financial approval, expenses with receipts, travel-office review, settlement |
 | 6 Integration | Ports + stub/HTTP adapters, mock-erp, mapping and validation, cost-centre check, travel export, finance posting, outbox, idempotency |
-| 7 Batch & operations | 8 scheduled jobs, batch/integration history, retries, alerts, admin UI, system health, metrics, reports with CSV |
+| 7 Batch & operations | 9 scheduled jobs, batch/integration history, retries, alerts, admin UI, system health, metrics, reports with CSV |
 | 8 Quality | Architecture, unit, integration, frontend and end-to-end tests; documentation; demo script |
 
 ## Prerequisites
@@ -110,7 +110,7 @@ All accounts use the password **`demo123`** (the login page has one-click button
 | `supervisor2` | Bettina Leitung | Employee, Supervisor | Approves central administration; delegate of `supervisor` |
 | `finance` | Frieda Finanz | Employee, Financial approver | Financial approval of trips |
 | `travel` | Tim Reise | Employee, Travel office | Reviews and settles expense claims |
-| `timeadmin` | Tanja Zeit | Employee, Time admin | Approves time corrections; working-time report |
+| `timeadmin` | Tanja Zeit | Employee, Time admin | Approves time corrections; working-time report; month closing |
 | `hradmin` | Hanna Personal | Employee, HR admin | Sees all employees; leave and HR reports |
 | `erpadmin` | Ernst Admin | ERP admin | Batch jobs, integration monitor, audit, outage simulation — no personnel data |
 | `auditor` | Anton Pruefer | Auditor | Read-only audit and operations views |
@@ -137,9 +137,9 @@ See [docs/demo-script.md](docs/demo-script.md) for the full 10–15 minute walkt
 ## Tests
 
 ```bash
-cd backend && mvn test                         # 68 tests: architecture, unit, integration on real PostgreSQL
+cd backend && mvn test                         # 72 tests: architecture, unit, integration on real PostgreSQL
 cd mock-erp && mvn test                        # 3 tests
-cd frontend && npm test -- --watch=false       # 20 Vitest unit/component tests
+cd frontend && npm test -- --watch=false       # 23 Vitest unit/component tests
 cd frontend && npx playwright install chromium && npx playwright test   # 5 end-to-end scenarios (needs a running stack)
 ```
 
@@ -172,5 +172,5 @@ Secrets come from the environment ([.env.example](.env.example)); none are commi
   - statutory breaks as in German law.
 - Leave is requested in whole days; there are no half days.
 - Roles are resolved at login, so a role change applies at the next login.
-- Monthly closing of time accounts (`CLOSED` status) and data-retention jobs are designed for but not implemented.
+- Data-retention jobs (anonymising closed requests) are designed for but not implemented.
 - The UI is English only; there is no DE/EN switch. Optional enhancements (AGENT.md §93), such as a BPMN engine, Keycloak, MinIO and WebSockets, are not implemented.

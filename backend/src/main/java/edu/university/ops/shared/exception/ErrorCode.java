@@ -36,6 +36,8 @@ public enum ErrorCode {
 
     // Time rules (AGENT.md §15)
     TIME_SEQUENCE_INVALID(HttpStatus.CONFLICT),
+    TIME_MONTH_CLOSED(HttpStatus.CONFLICT),
+    TIME_MONTH_NOT_CLOSABLE(HttpStatus.UNPROCESSABLE_ENTITY),
 
     // Travel rules (AGENT.md §14)
     COST_CENTRE_INVALID(HttpStatus.UNPROCESSABLE_ENTITY),
