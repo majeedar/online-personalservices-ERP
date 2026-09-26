@@ -93,8 +93,10 @@ class AbsenceScenarioTest extends PostgresTestSupport {
         JsonNode balance = annualBalance(employee, 2027);
         assertThat(balance.get("remainingDays").asDouble()).isEqualTo(before - 5);
         assertThat(balance.get("reservedDays").asDouble()).isEqualTo(reservedBefore);
-        JsonNode notes = employee.get("/api/v1/notifications").expect(200).body();
-        assertThat(notes.findValuesAsText("type")).contains("ABSENCE_APPROVED");
+        employee.get("/api/v1/notifications").expect(200);
+        // By business object: the test clock is fixed, so "latest 20" of the list endpoint has no stable order.
+        assertThat(jdbc.queryForList("SELECT type FROM notification WHERE business_object_id = ?::uuid", String.class,
+                id)).contains("ABSENCE_APPROVED");
         JsonNode detail = employee.get("/api/v1/absences/" + id).expect(200).body();
         JsonNode decision = detail.at("/history/0/steps/0/decisions/0");
         assertThat(decision.get("approverName").asText()).isEqualTo("Stefan Beispiel");

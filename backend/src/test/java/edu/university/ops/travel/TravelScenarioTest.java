@@ -113,7 +113,9 @@ class TravelScenarioTest extends PostgresTestSupport {
         JsonNode exported = employee.get("/api/v1/travel/" + id).expect(200).body();
         assertThat(exported.get("externalTravelReference").asText()).startsWith("TRV-");
         assertThat(exported.findValuesAsText("decision")).containsExactly("APPROVE", "APPROVE");
-        assertThat(employee.get("/api/v1/notifications").body().findValuesAsText("type")).contains("TRAVEL_AUTHORIZED");
+        // By business object: the test clock is fixed, so "latest 20" of the list endpoint has no stable order.
+        assertThat(jdbc.queryForList("SELECT type FROM notification WHERE business_object_id = ?::uuid", String.class,
+                id)).contains("TRAVEL_AUTHORIZED");
         assertThat(jdbc.queryForList("SELECT action FROM audit_log WHERE entity_id = ?", String.class, id))
                 .contains("TRAVEL_SUBMITTED", "TRAVEL_APPROVED");
     }
