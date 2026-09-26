@@ -184,6 +184,7 @@ class AbsenceController {
                 task.map(TaskView::id).orElse(null), task.map(t -> t.viaDelegationFrom() != null).orElse(false));
         return new AbsenceResponse(r.getId(), new PersonRef(r.getEmployeeId(), names.get(r.getEmployeeId())),
                 LeaveTypeResponse.of(type), r.getStartDate(), r.getEndDate(),
+                r.getDayParts().start(), r.getDayParts().end(),
                 r.getRepresentativeEmployeeId() == null ? null
                         : new PersonRef(r.getRepresentativeEmployeeId(), names.get(r.getRepresentativeEmployeeId())),
                 r.getComment(), r.getStatus(), r.workingDays(), r.totalDeduction(), r.getCreatedAt(),

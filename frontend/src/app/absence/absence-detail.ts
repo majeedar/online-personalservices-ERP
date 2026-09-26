@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { AbsenceDetail as Detail } from '../core/api/models';
-import { formatMinutes, humanize } from '../core/format';
+import { formatMinutes, halfDaySuffix, humanize } from '../core/format';
 import { askDecision } from '../shared/decision-dialog';
 import { StatusChip } from '../shared/status-chip';
 import { WorkflowTimeline } from '../shared/workflow-timeline';
@@ -28,7 +28,7 @@ import { WorkflowTimeline } from '../shared/workflow-timeline';
     @if (request(); as r) {
       <header class="page-header">
         <div>
-          <h1>{{ r.leaveType.name }} · {{ r.startDate | date: 'mediumDate' }} – {{ r.endDate | date: 'mediumDate' }}</h1>
+          <h1>{{ r.leaveType.name }} · {{ r.startDate | date: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}@if (r.endDate !== r.startDate) { – {{ r.endDate | date: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}}</h1>
           <p>{{ r.employee.displayName }} · <ops-status [status]="r.status" /></p>
         </div>
         <div class="actions">
@@ -109,7 +109,7 @@ import { WorkflowTimeline } from '../shared/workflow-timeline';
               @for (d of r.days; track d.date) {
                 <tr [class.off]="d.kind !== 'WORKING_DAY'">
                   <th scope="row">{{ d.date | date: 'EEE, d MMM y' }}</th>
-                  <td>{{ humanize(d.kind) }}</td>
+                  <td>{{ humanize(d.kind) }}{{ halfDaySuffix(d.dayPart) }}</td>
                   <td class="num">{{ d.plannedMinutes ? formatMinutes(d.plannedMinutes) : '—' }}</td>
                   <td class="num">{{ d.creditedMinutes ? formatMinutes(d.creditedMinutes) : '—' }}</td>
                   <td class="num">{{ d.entitlementDeduction || '—' }}</td>
@@ -142,6 +142,7 @@ export class AbsenceDetail implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly formatMinutes = formatMinutes;
   protected readonly humanize = humanize;
+  protected readonly halfDaySuffix = halfDaySuffix;
 
   ngOnInit(): void {
     void this.load();

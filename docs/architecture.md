@@ -163,6 +163,10 @@ Dependencies point inward: `api → application → domain ← persistence / int
 **Decision:** The `data-retention` job (`shared/retention`) runs one `RetentionTask` per module (absence, travel, time corrections, notifications). A task clears personal free text, representatives, decision comments and attachments of finished requests older than the configured period, and sets `anonymised_at`. Rows, status, dates and amounts stay.
 **Why:** Entitlements, time accounts, reports and ERP exports reference these rows. Deleting them would change historical balances and break reconciliation. Personal detail beyond what these need is what data protection asks us to remove. Keeping the tasks inside the modules means `shared` does not depend on business modules (ADR-001).
 
+### ADR-018 Half days are day parts of the first and last day
+**Decision:** A request has a `startDayPart` and an `endDayPart` (`FULL`, `MORNING`, `AFTERNOON`). A single day is a full day, a morning or an afternoon. A longer absence may start at noon and end at noon, and every day in between is a full day. A half working day deducts 0.5 days and plans and credits half the day's target. Two requests may share a date only if one covers the morning and the other the afternoon. The time module adds up the minutes of both.
+**Why:** This covers what people actually request (a half day off, leaving at noon before a trip) without hourly leave. Hourly leave would need a different entitlement unit and times of day in the time account.
+
 ## 6. Security model (summary — details in [security.md](security.md))
 
 | Layer | Mechanism |

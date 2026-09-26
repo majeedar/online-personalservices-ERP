@@ -58,7 +58,8 @@ class LeaveController {
         return queries.teamAbsences(CurrentUser.require(), start, end).stream()
                 .map(t -> new TeamAbsenceResponse(t.request().getId(),
                         new PersonRef(t.employee().id(), t.employee().displayName()), t.request().getStartDate(),
-                        t.request().getEndDate(), t.request().getStatus(), t.request().workingDays()))
+                        t.request().getEndDate(), t.request().getDayParts().start(), t.request().getDayParts().end(),
+                        t.request().getStatus(), t.request().workingDays()))
                 .toList();
     }
 }

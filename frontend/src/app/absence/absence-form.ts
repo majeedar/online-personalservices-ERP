@@ -13,8 +13,8 @@ import { Router, RouterLink } from '@angular/router';
 import { debounceTime } from 'rxjs';
 import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
-import { AbsenceInput, AbsencePreview, LeaveType, PersonRef } from '../core/api/models';
-import { formatDays, formatMinutes, humanize, isoDate, parseIsoDate } from '../core/format';
+import { AbsenceInput, AbsencePreview, DayPart, LeaveType, PersonRef } from '../core/api/models';
+import { formatDays, formatMinutes, halfDaySuffix, humanize, isoDate, parseIsoDate } from '../core/format';
 import { EmployeePicker } from '../shared/employee-picker';
 
 /**
@@ -84,6 +84,34 @@ import { EmployeePicker } from '../shared/employee-picker';
               }
             </mat-form-field>
 
+            @if (singleDay()) {
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Day</mat-label>
+                <mat-select formControlName="startPart">
+                  <mat-option value="FULL">Full day</mat-option>
+                  <mat-option value="MORNING">Morning (half day)</mat-option>
+                  <mat-option value="AFTERNOON">Afternoon (half day)</mat-option>
+                </mat-select>
+              </mat-form-field>
+            } @else if (form.controls.start.value && form.controls.end.value) {
+              <div class="parts">
+                <mat-form-field appearance="outline">
+                  <mat-label>First day</mat-label>
+                  <mat-select formControlName="startPart">
+                    <mat-option value="FULL">Full day</mat-option>
+                    <mat-option value="AFTERNOON">From noon (half day)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Last day</mat-label>
+                  <mat-select formControlName="endPart">
+                    <mat-option value="FULL">Full day</mat-option>
+                    <mat-option value="MORNING">Until noon (half day)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            }
+
             @if (loaded()) {
               <ops-employee-picker
                 [control]="representative"
@@ -133,7 +161,7 @@ import { EmployeePicker } from '../shared/employee-picker';
                 @for (d of p.days; track d.date) {
                   <tr [class.off]="d.kind !== 'WORKING_DAY'">
                     <th scope="row">{{ d.date | date: 'EEE, d MMM' }}</th>
-                    <td>{{ humanize(d.kind) }}</td>
+                    <td>{{ humanize(d.kind) }}{{ halfDaySuffix(d.dayPart) }}</td>
                     <td class="num">{{ d.plannedMinutes ? formatMinutes(d.plannedMinutes) : '—' }}</td>
                   </tr>
                 }
@@ -149,6 +177,8 @@ import { EmployeePicker } from '../shared/employee-picker';
   styles: `
     .figures { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 0 0 16px; }
     .figures dd { margin: 0; font-weight: 500; text-align: right; }
+    .parts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    @media (max-width: 600px) { .parts { grid-template-columns: 1fr; } }
   `,
 })
 export class AbsenceForm implements OnInit {
@@ -168,13 +198,22 @@ export class AbsenceForm implements OnInit {
   protected readonly formatDays = formatDays;
   protected readonly formatMinutes = formatMinutes;
   protected readonly humanize = humanize;
+  protected readonly halfDaySuffix = halfDaySuffix;
 
   protected readonly form = inject(FormBuilder).group({
     leaveTypeId: ['', Validators.required],
     start: [null as Date | null, Validators.required],
     end: [null as Date | null, Validators.required],
+    startPart: ['FULL' as DayPart],
+    endPart: ['FULL' as DayPart],
     comment: [''],
   });
+
+  /** Start and end on the same date: one day-part choice (full, morning, afternoon). */
+  protected singleDay(): boolean {
+    const { start, end } = this.form.getRawValue();
+    return !!start && !!end && isoDate(start) === isoDate(end);
+  }
 
   protected selectedType(): LeaveType | undefined {
     return this.leaveTypes().find((t) => t.id === this.form.controls.leaveTypeId.value);
@@ -191,6 +230,8 @@ export class AbsenceForm implements OnInit {
           leaveTypeId: r.leaveType.id,
           start: parseIsoDate(r.startDate),
           end: parseIsoDate(r.endDate),
+          startPart: r.startDayPart ?? 'FULL',
+          endPart: r.endDayPart ?? 'FULL',
           comment: r.comment ?? '',
         });
         this.representative.setValue(r.representative?.id ?? null);
@@ -202,6 +243,7 @@ export class AbsenceForm implements OnInit {
       this.error.set(describeError(e));
     }
     this.loaded.set(true);
+    this.form.valueChanges.subscribe(() => this.dropHalvesThatNoLongerFit());
     this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => void this.refreshPreview());
     this.representative.valueChanges.pipe(debounceTime(300)).subscribe(() => void this.refreshPreview());
     void this.refreshPreview();
@@ -216,8 +258,34 @@ export class AbsenceForm implements OnInit {
       leaveTypeId: v.leaveTypeId,
       startDate: isoDate(v.start),
       endDate: isoDate(v.end),
+      ...this.dayParts(v.startPart, v.endPart),
       representativeId: this.representative.value,
       comment: v.comment || null,
+    };
+  }
+
+  /** Over several days only "from noon" (first day) and "until noon" (last day) are possible. */
+  private dropHalvesThatNoLongerFit(): void {
+    const { start, end, startPart, endPart } = this.form.controls;
+    if (!start.value || !end.value || this.singleDay()) {
+      return;
+    }
+    if (startPart.value === 'MORNING') {
+      startPart.setValue('FULL', { emitEvent: false });
+    }
+    if (endPart.value === 'AFTERNOON') {
+      endPart.setValue('FULL', { emitEvent: false });
+    }
+  }
+
+  /** Maps the choices to what the server accepts; a choice that no longer fits the period means a full day. */
+  private dayParts(start: DayPart | null, end: DayPart | null): Pick<AbsenceInput, 'startDayPart' | 'endDayPart'> {
+    if (this.singleDay()) {
+      return { startDayPart: start ?? 'FULL', endDayPart: start ?? 'FULL' };
+    }
+    return {
+      startDayPart: start === 'AFTERNOON' ? 'AFTERNOON' : 'FULL',
+      endDayPart: end === 'MORNING' ? 'MORNING' : 'FULL',
     };
   }
 

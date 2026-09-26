@@ -43,6 +43,9 @@ Every error has one shape (AGENT.md §33):
 | GET | `/leave-types`, `/leave-balances?year=` | |
 | GET / POST | `/absences` | list own / create draft |
 | POST | `/absences/preview` | days, balance, rule violations — nothing saved |
+
+Absence bodies: `{leaveTypeId, startDate, endDate, startDayPart?, endDayPart?, representativeId?, comment?}`. Day parts are `FULL` (default), `MORNING` or `AFTERNOON` (ADR-018). A single day uses one part; a longer absence may start `AFTERNOON` and end `MORNING`, anything else is `400 INVALID_DAY_PART`. `workingDays` and `deduction` are decimals (0.5 per half day), and every day carries its `dayPart`.
+
 | GET / PUT | `/absences/{id}` | detail incl. days, workflow history, allowed actions / update draft |
 | POST | `/absences/{id}/submit`, `/approve`, `/reject`, `/return`, `/cancel` | reject/return need `{comment}` |
 | POST / GET | `/absences/{id}/documents`, `/absences/{id}/documents/{docId}` | multipart upload / download |

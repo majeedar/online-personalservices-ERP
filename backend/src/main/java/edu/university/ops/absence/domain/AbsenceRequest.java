@@ -36,6 +36,13 @@ public class AbsenceRequest {
     private UUID leaveTypeId;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
+    private DayPart startDayPart = DayPart.FULL;
+
+    @Enumerated(EnumType.STRING)
+    private DayPart endDayPart = DayPart.FULL;
+
     private UUID representativeEmployeeId;
     private String comment;
 
@@ -60,7 +67,7 @@ public class AbsenceRequest {
     }
 
     public static AbsenceRequest draft(UUID employeeId, UUID leaveTypeId, LocalDate start, LocalDate end,
-                                       UUID representativeId, String comment, Instant now) {
+                                       DayParts parts, UUID representativeId, String comment, Instant now) {
         requireValidRange(start, end);
         AbsenceRequest r = new AbsenceRequest();
         r.id = UUID.randomUUID();
@@ -68,6 +75,8 @@ public class AbsenceRequest {
         r.leaveTypeId = leaveTypeId;
         r.startDate = start;
         r.endDate = end;
+        r.startDayPart = parts.start();
+        r.endDayPart = parts.end();
         r.representativeEmployeeId = representativeId;
         r.comment = comment;
         r.status = AbsenceStatus.DRAFT;
@@ -76,8 +85,8 @@ public class AbsenceRequest {
         return r;
     }
 
-    public void edit(UUID leaveTypeId, LocalDate start, LocalDate end, UUID representativeId, String comment,
-                     Instant now) {
+    public void edit(UUID leaveTypeId, LocalDate start, LocalDate end, DayParts parts, UUID representativeId,
+                     String comment, Instant now) {
         if (status != AbsenceStatus.DRAFT) {
             throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE, "Only draft requests can be edited.");
         }
@@ -85,6 +94,8 @@ public class AbsenceRequest {
         this.leaveTypeId = leaveTypeId;
         this.startDate = start;
         this.endDate = end;
+        this.startDayPart = parts.start();
+        this.endDayPart = parts.end();
         this.representativeEmployeeId = representativeId;
         this.comment = comment;
         this.updatedAt = now;
@@ -203,8 +214,18 @@ public class AbsenceRequest {
         return result;
     }
 
-    public long workingDays() {
-        return days.stream().filter(d -> d.getDayKind() == AbsenceDay.Kind.WORKING_DAY).count();
+    /** Working days covered, counting a half day as 0.5. */
+    public BigDecimal workingDays() {
+        return days.stream().map(AbsenceDay::workingDayShare).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public DayParts getDayParts() {
+        return new DayParts(startDayPart, endDayPart);
+    }
+
+    /** The part of {@code date} this request covers (full day between the first and last day). */
+    public DayPart dayPartOn(LocalDate date) {
+        return getDayParts().on(date, startDate, endDate);
     }
 
     public List<LocalDate> dates() {

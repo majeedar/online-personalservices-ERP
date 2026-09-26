@@ -6,6 +6,7 @@ import edu.university.ops.absence.domain.AbsenceDay;
 import edu.university.ops.absence.domain.AbsenceDayCalculator.CalculatedDay;
 import edu.university.ops.absence.domain.AbsenceRequest;
 import edu.university.ops.absence.domain.AbsenceStatus;
+import edu.university.ops.absence.domain.DayPart;
 import edu.university.ops.absence.domain.LeaveEntitlement;
 import edu.university.ops.absence.domain.LeaveType;
 import edu.university.ops.shared.documents.Document;
@@ -24,10 +25,13 @@ final class AbsenceDtos {
     private AbsenceDtos() {
     }
 
+    /** {@code startDayPart} / {@code endDayPart}: FULL (default), MORNING or AFTERNOON (ADR-018). */
     record AbsenceRequestBody(@NotNull UUID leaveTypeId, @NotNull LocalDate startDate, @NotNull LocalDate endDate,
-                              UUID representativeId, @Size(max = 1000) String comment) {
+                              DayPart startDayPart, DayPart endDayPart, UUID representativeId,
+                              @Size(max = 1000) String comment) {
         AbsenceService.AbsenceInput toInput() {
-            return new AbsenceService.AbsenceInput(leaveTypeId, startDate, endDate, representativeId, comment);
+            return new AbsenceService.AbsenceInput(leaveTypeId, startDate, endDate, startDayPart, endDayPart,
+                    representativeId, comment);
         }
     }
 
@@ -42,15 +46,15 @@ final class AbsenceDtos {
         }
     }
 
-    record DayResponse(LocalDate date, AbsenceDay.Kind kind, int plannedMinutes, int creditedMinutes,
-                       BigDecimal entitlementDeduction) {
+    record DayResponse(LocalDate date, AbsenceDay.Kind kind, DayPart dayPart, int plannedMinutes,
+                       int creditedMinutes, BigDecimal entitlementDeduction) {
         static DayResponse of(AbsenceDay d) {
-            return new DayResponse(d.getDate(), d.getDayKind(), d.getPlannedMinutes(), d.getCreditedMinutes(),
-                    d.getEntitlementDeduction());
+            return new DayResponse(d.getDate(), d.getDayKind(), d.getDayPart(), d.getPlannedMinutes(),
+                    d.getCreditedMinutes(), d.getEntitlementDeduction());
         }
 
         static DayResponse of(CalculatedDay d) {
-            return new DayResponse(d.date(), d.kind(), d.plannedMinutes(), d.creditedMinutes(),
+            return new DayResponse(d.date(), d.kind(), d.part(), d.plannedMinutes(), d.creditedMinutes(),
                     d.entitlementDeduction());
         }
     }
@@ -61,7 +65,7 @@ final class AbsenceDtos {
         }
     }
 
-    record PreviewResponse(List<DayResponse> days, long workingDays, BigDecimal deduction, BigDecimal currentBalance,
+    record PreviewResponse(List<DayResponse> days, BigDecimal workingDays, BigDecimal deduction, BigDecimal currentBalance,
                            BigDecimal projectedBalance, List<IssueResponse> issues) {
         static PreviewResponse of(AbsenceService.Preview p) {
             return new PreviewResponse(p.days().stream().map(DayResponse::of).toList(), p.workingDays(),
@@ -74,10 +78,11 @@ final class AbsenceDtos {
     }
 
     record AbsenceSummaryResponse(UUID id, LeaveTypeResponse leaveType, LocalDate startDate, LocalDate endDate,
-                                  AbsenceStatus status, long workingDays, BigDecimal deduction, Instant submittedAt) {
+                                  DayPart startDayPart, DayPart endDayPart, AbsenceStatus status,
+                                  BigDecimal workingDays, BigDecimal deduction, Instant submittedAt) {
         static AbsenceSummaryResponse of(AbsenceRequest r, LeaveType t) {
             return new AbsenceSummaryResponse(r.getId(), LeaveTypeResponse.of(t), r.getStartDate(), r.getEndDate(),
-                    r.getStatus(), r.workingDays(), r.totalDeduction(), r.getSubmittedAt());
+                    r.getDayParts().start(), r.getDayParts().end(), r.getStatus(), r.workingDays(), r.totalDeduction(), r.getSubmittedAt());
         }
     }
 
@@ -95,8 +100,8 @@ final class AbsenceDtos {
     }
 
     record AbsenceResponse(UUID id, PersonRef employee, LeaveTypeResponse leaveType, LocalDate startDate,
-                           LocalDate endDate, PersonRef representative, String comment, AbsenceStatus status,
-                           long workingDays, BigDecimal deduction, Instant createdAt, Instant submittedAt,
+                           LocalDate endDate, DayPart startDayPart, DayPart endDayPart, PersonRef representative,
+                           String comment, AbsenceStatus status, BigDecimal workingDays, BigDecimal deduction, Instant createdAt, Instant submittedAt,
                            List<DayResponse> days, List<InstanceHistory> history, List<DocumentResponse> documents,
                            AllowedActions actions, Instant anonymisedAt) {
     }
@@ -113,6 +118,7 @@ final class AbsenceDtos {
 
     /** Team view: the leave type is deliberately omitted (health data, AGENT.md §82). */
     record TeamAbsenceResponse(UUID requestId, PersonRef employee, LocalDate startDate, LocalDate endDate,
-                               AbsenceStatus status, long workingDays) {
+                               DayPart startDayPart, DayPart endDayPart, AbsenceStatus status,
+                               BigDecimal workingDays) {
     }
 }

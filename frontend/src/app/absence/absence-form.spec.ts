@@ -60,4 +60,37 @@ describe('AbsenceForm', () => {
     expect(el.textContent).toContain('23 days');
     expect(el.textContent).toContain('overlaps with an existing request');
   });
+
+  it('sends a half day for a single-day request and shows it in the calculation', async () => {
+    const component = fixture.componentInstance as unknown as { form: { patchValue: (v: object) => void } };
+    component.form.patchValue({ start: new Date(2027, 2, 1), end: new Date(2027, 2, 1), startPart: 'AFTERNOON' });
+    await new Promise((r) => setTimeout(r, 350));
+    fixture.detectChanges();
+
+    expect(el.textContent).toContain('Day');
+    const preview = http.expectOne((r) => r.url === '/api/v1/absences/preview');
+    expect(preview.request.body.startDayPart).toBe('AFTERNOON');
+    expect(preview.request.body.endDayPart).toBe('AFTERNOON');
+    preview.flush({
+      days: [{ date: '2027-03-01', kind: 'WORKING_DAY', dayPart: 'AFTERNOON', plannedMinutes: 240, creditedMinutes: 240, entitlementDeduction: 0.5 }],
+      workingDays: 0.5,
+      deduction: 0.5,
+      issues: [],
+    });
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+
+    expect(el.textContent).toContain('Working day (afternoon)');
+  });
+
+  it('drops a morning start when the period spans several days', async () => {
+    const component = fixture.componentInstance as unknown as { form: { patchValue: (v: object) => void } };
+    component.form.patchValue({ start: new Date(2027, 2, 1), end: new Date(2027, 2, 3), startPart: 'MORNING', endPart: 'MORNING' });
+    await new Promise((r) => setTimeout(r, 350));
+
+    const preview = http.expectOne((r) => r.url === '/api/v1/absences/preview');
+    expect(preview.request.body.startDayPart).toBe('FULL');
+    expect(preview.request.body.endDayPart).toBe('MORNING');
+    preview.flush({ days: [], workingDays: 0, deduction: 0, issues: [] });
+  });
 });

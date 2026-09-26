@@ -116,7 +116,12 @@ public class AbsenceQueryService implements AbsenceLookup, AbsenceReports {
             String code = types.get(r.getLeaveTypeId()).getCode();
             for (AbsenceDay d : r.getDays()) {
                 if (!d.getDate().isBefore(from) && !d.getDate().isAfter(to)) {
-                    result.put(d.getDate(), new AbsenceMinutes(d.getPlannedMinutes(), d.getCreditedMinutes(), code));
+                    // A morning and an afternoon absence may share a date (ADR-018): add them up.
+                    result.merge(d.getDate(), new AbsenceMinutes(d.getPlannedMinutes(), d.getCreditedMinutes(), code),
+                            (a, b) -> new AbsenceMinutes(a.plannedMinutes() + b.plannedMinutes(),
+                                    a.creditedMinutes() + b.creditedMinutes(),
+                                    a.leaveTypeCode().equals(b.leaveTypeCode()) ? a.leaveTypeCode()
+                                            : a.leaveTypeCode() + "/" + b.leaveTypeCode()));
                 }
             }
         }

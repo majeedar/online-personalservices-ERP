@@ -42,3 +42,8 @@ export function formatDays(days: number | null | undefined): string {
   const rounded = Math.round(days * 10) / 10;
   return `${rounded} ${Math.abs(rounded) === 1 ? 'day' : 'days'}`;
 }
+
+/** " (morning)" / " (afternoon)" for a half day, "" for a full day. */
+export function halfDaySuffix(part: string | null | undefined): string {
+  return part === 'MORNING' || part === 'AFTERNOON' ? ` (${part.toLowerCase()})` : '';
+}

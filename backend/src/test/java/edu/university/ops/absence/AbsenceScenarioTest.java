@@ -7,7 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.university.ops.support.ApiClient;
 import edu.university.ops.support.IntegrationTest;
 import edu.university.ops.support.PostgresTestSupport;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,8 @@ class AbsenceScenarioTest extends PostgresTestSupport {
 
     static final String ANNUAL = "00000000-0000-0000-0000-000000000301";
     static final String SICK = "00000000-0000-0000-0000-000000000303";
+    static final String FLEX = "00000000-0000-0000-0000-000000000302";
+    static final String EMPLOYEE_ID = "20000000-0000-0000-0000-000000000001";
     static final String SUPERVISOR_ID = "20000000-0000-0000-0000-000000000002";
 
     @Autowired
@@ -34,6 +39,9 @@ class AbsenceScenarioTest extends PostgresTestSupport {
 
     @Autowired
     JdbcTemplate jdbc;
+
+    @Autowired
+    AbsenceLookup absences;
 
     ApiClient employee;
     ApiClient supervisor;
@@ -230,6 +238,44 @@ class AbsenceScenarioTest extends PostgresTestSupport {
         } finally {
             supervisor.post("/api/v1/delegations/" + delegation + "/revoke", null).expect(204);
         }
+    }
+
+    /** ADR-018: a morning and an afternoon absence share a date; a full day on it overlaps. */
+    @Test
+    void halfDaysDeductHalfAndMayShareADate() throws Exception {
+        double reservedBefore = annualBalance(employee, 2027).get("reservedDays").asDouble();
+        var morning = new HashMap<String, Object>(body(ANNUAL, "2027-10-04", "2027-10-04"));
+        morning.put("startDayPart", "MORNING");
+        String annual = employee.post("/api/v1/absences", morning).expect(200).body().get("id").asText();
+        JsonNode submitted = employee.post("/api/v1/absences/" + annual + "/submit", null).expect(200).body();
+        assertThat(submitted.get("workingDays").decimalValue()).isEqualByComparingTo("0.5");
+        assertThat(submitted.get("deduction").decimalValue()).isEqualByComparingTo("0.5");
+        assertThat(submitted.at("/days/0/dayPart").asText()).isEqualTo("MORNING");
+        assertThat(annualBalance(employee, 2027).get("reservedDays").asDouble()).isEqualTo(reservedBefore + 0.5);
+
+        // The afternoon is still free for a flex day ...
+        var afternoon = new HashMap<String, Object>(body(FLEX, "2027-10-04", "2027-10-04"));
+        afternoon.put("endDayPart", "AFTERNOON");
+        String flex = employee.post("/api/v1/absences", afternoon).expect(200).body().get("id").asText();
+        employee.post("/api/v1/absences/" + flex + "/submit", null).expect(200);
+        // ... but not for a full day.
+        String full = employee.post("/api/v1/absences", body(ANNUAL, "2027-10-04", "2027-10-05")).expect(200)
+                .body().get("id").asText();
+        assertThat(employee.post("/api/v1/absences/" + full + "/submit", null).errorCode())
+                .isEqualTo("ABSENCE_OVERLAP");
+
+        supervisor.post("/api/v1/absences/" + annual + "/approve", Map.of()).expect(200);
+        supervisor.post("/api/v1/absences/" + flex + "/approve", Map.of()).expect(200);
+        var day = absences.approvedAbsences(UUID.fromString(EMPLOYEE_ID), LocalDate.of(2027, 10, 4),
+                LocalDate.of(2027, 10, 4)).values().iterator().next();
+        int target = submitted.at("/days/0/plannedMinutes").asInt() * 2;
+        assertThat(day.plannedMinutes()).isBetween(target - 1, target);
+        assertThat(day.creditedMinutes()).isEqualTo(submitted.at("/days/0/creditedMinutes").asInt());
+        assertThat(day.leaveTypeCode()).contains("ANNUAL_LEAVE", "FLEX_DAY");
+
+        var invalid = new HashMap<String, Object>(body(ANNUAL, "2027-10-11", "2027-10-12"));
+        invalid.put("startDayPart", "MORNING");
+        assertThat(employee.post("/api/v1/absences", invalid).errorCode()).isEqualTo("INVALID_DAY_PART");
     }
 
     @Test

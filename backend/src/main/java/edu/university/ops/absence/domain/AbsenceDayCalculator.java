@@ -14,7 +14,8 @@ import java.util.function.Function;
  *
  * <p>A day counts only if the employee's schedule makes it a working day and it is
  * not a public holiday. Only counted days reduce the entitlement (one day each for
- * deducting leave types) and carry planned / credited minutes.
+ * deducting leave types, half a day for a morning or afternoon) and carry planned /
+ * credited minutes (half the target on a half day, ADR-018).
  */
 public final class AbsenceDayCalculator {
 
@@ -29,22 +30,40 @@ public final class AbsenceDayCalculator {
     }
 
     public record CalculatedDay(LocalDate date, int plannedMinutes, int creditedMinutes,
-                                BigDecimal entitlementDeduction, AbsenceDay.Kind kind) {
+                                BigDecimal entitlementDeduction, AbsenceDay.Kind kind, DayPart part) {
+
+        public CalculatedDay(LocalDate date, int plannedMinutes, int creditedMinutes,
+                             BigDecimal entitlementDeduction, AbsenceDay.Kind kind) {
+            this(date, plannedMinutes, creditedMinutes, entitlementDeduction, kind, DayPart.FULL);
+        }
 
         public boolean counts() {
             return kind == AbsenceDay.Kind.WORKING_DAY;
         }
+
+        /** Working days this day contributes: 1, 0.5 or 0. */
+        public BigDecimal workingDayShare() {
+            return counts() ? part.fraction() : BigDecimal.ZERO;
+        }
+    }
+
+    /** Full days only. */
+    public static List<CalculatedDay> calculate(LocalDate start, LocalDate end, LeaveType leaveType,
+                                                Function<LocalDate, Optional<DayPlan>> plan, Set<LocalDate> holidays) {
+        return calculate(start, end, DayParts.FULL, leaveType, plan, holidays);
     }
 
     /**
+     * @param parts    day parts of the first and last day (validated, see {@link DayParts#of})
      * @param plan     the employee's schedule per date; empty if no schedule is valid on that date
      * @param holidays public holidays in the range
      */
-    public static List<CalculatedDay> calculate(LocalDate start, LocalDate end, LeaveType leaveType,
+    public static List<CalculatedDay> calculate(LocalDate start, LocalDate end, DayParts parts, LeaveType leaveType,
                                                 Function<LocalDate, Optional<DayPlan>> plan, Set<LocalDate> holidays) {
         List<CalculatedDay> days = new ArrayList<>();
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
             Optional<DayPlan> dayPlan = plan.apply(date);
+            DayPart part = parts.on(date, start, end);
             AbsenceDay.Kind kind;
             if (dayPlan.isEmpty()) {
                 kind = AbsenceDay.Kind.NO_SCHEDULE;
@@ -56,11 +75,11 @@ public final class AbsenceDayCalculator {
                 kind = AbsenceDay.Kind.WORKING_DAY;
             }
             if (kind == AbsenceDay.Kind.WORKING_DAY) {
-                int planned = dayPlan.get().targetMinutes();
+                int planned = part.share(dayPlan.get().targetMinutes());
                 days.add(new CalculatedDay(date, planned, leaveType.isCreditsWorkingTime() ? planned : 0,
-                        leaveType.isDeductsEntitlement() ? BigDecimal.ONE : BigDecimal.ZERO, kind));
+                        leaveType.isDeductsEntitlement() ? part.fraction() : BigDecimal.ZERO, kind, part));
             } else {
-                days.add(new CalculatedDay(date, 0, 0, BigDecimal.ZERO, kind));
+                days.add(new CalculatedDay(date, 0, 0, BigDecimal.ZERO, kind, part));
             }
         }
         return days;

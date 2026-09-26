@@ -8,6 +8,8 @@ import edu.university.ops.absence.domain.AbsenceRepositories.LeaveEntitlementRep
 import edu.university.ops.absence.domain.AbsenceRepositories.LeaveTypeRepository;
 import edu.university.ops.absence.domain.AbsenceRequest;
 import edu.university.ops.absence.domain.AbsenceStatus;
+import edu.university.ops.absence.domain.DayPart;
+import edu.university.ops.absence.domain.DayParts;
 import edu.university.ops.absence.domain.LeaveEntitlement;
 import edu.university.ops.absence.domain.LeaveType;
 import edu.university.ops.employee.EmployeeDirectory;
@@ -80,12 +82,22 @@ public class AbsenceService {
         this.clock = clock;
     }
 
-    public record Preview(List<CalculatedDay> days, long workingDays, BigDecimal deduction, BigDecimal currentBalance,
-                          BigDecimal projectedBalance, List<Issue> issues) {
+    public record Preview(List<CalculatedDay> days, BigDecimal workingDays, BigDecimal deduction,
+                          BigDecimal currentBalance, BigDecimal projectedBalance, List<Issue> issues) {
     }
 
-    public record AbsenceInput(UUID leaveTypeId, LocalDate startDate, LocalDate endDate, UUID representativeId,
-                               String comment) {
+    public record AbsenceInput(UUID leaveTypeId, LocalDate startDate, LocalDate endDate, DayPart startDayPart,
+                               DayPart endDayPart, UUID representativeId, String comment) {
+
+        public AbsenceInput(UUID leaveTypeId, LocalDate startDate, LocalDate endDate, UUID representativeId,
+                            String comment) {
+            this(leaveTypeId, startDate, endDate, null, null, representativeId, comment);
+        }
+
+        /** Validated day parts; throws INVALID_DAY_PART. */
+        public DayParts dayParts() {
+            return DayParts.of(startDate, endDate, startDayPart, endDayPart);
+        }
     }
 
     // ------------------------------------------------------------------ preview
@@ -93,9 +105,10 @@ public class AbsenceService {
     @Transactional(readOnly = true)
     public Preview preview(OpsPrincipal principal, AbsenceInput input, UUID excludeRequestId) {
         LeaveType type = leaveType(input.leaveTypeId());
+        DayParts parts = input.dayParts();
         List<CalculatedDay> days = rules.calculateDays(principal.employeeId(), type, input.startDate(),
-                input.endDate());
-        List<Issue> issues = rules.check(principal.employeeId(), type, input.startDate(), input.endDate(),
+                input.endDate(), parts);
+        List<Issue> issues = rules.check(principal.employeeId(), type, input.startDate(), input.endDate(), parts,
                 input.representativeId(), days, excludeRequestId).stream()
                 .filter(i -> i.code() != ErrorCode.ATTACHMENT_REQUIRED || excludeRequestId == null
                         || !documents.hasDocuments(BUSINESS_OBJECT_TYPE, excludeRequestId))
@@ -112,7 +125,8 @@ public class AbsenceService {
                 projected = current.subtract(AbsenceRules.deductionByYear(days).getOrDefault(year, BigDecimal.ZERO));
             }
         }
-        long working = days.stream().filter(CalculatedDay::counts).count();
+        BigDecimal working = days.stream().map(CalculatedDay::workingDayShare)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new Preview(days, working, deduction, current, projected, issues);
     }
 
@@ -121,9 +135,11 @@ public class AbsenceService {
     public AbsenceRequest createDraft(OpsPrincipal principal, AbsenceInput input) {
         LeaveType type = leaveType(input.leaveTypeId());
         Instant now = Instant.now(clock);
+        DayParts parts = input.dayParts();
         AbsenceRequest request = AbsenceRequest.draft(principal.employeeId(), type.getId(), input.startDate(),
-                input.endDate(), input.representativeId(), input.comment(), now);
-        request.replaceDays(rules.calculateDays(principal.employeeId(), type, input.startDate(), input.endDate()));
+                input.endDate(), parts, input.representativeId(), input.comment(), now);
+        request.replaceDays(rules.calculateDays(principal.employeeId(), type, input.startDate(), input.endDate(),
+                parts));
         requests.save(request);
         audit.record("ABSENCE_DRAFT_CREATED", BUSINESS_OBJECT_TYPE, request.getId(), null, snapshot(request, type));
         return request;
@@ -133,9 +149,11 @@ public class AbsenceService {
         AbsenceRequest request = ownRequest(requestId, principal);
         LeaveType type = leaveType(input.leaveTypeId());
         var before = snapshot(request, leaveType(request.getLeaveTypeId()));
-        request.edit(type.getId(), input.startDate(), input.endDate(), input.representativeId(), input.comment(),
-                Instant.now(clock));
-        request.replaceDays(rules.calculateDays(request.getEmployeeId(), type, input.startDate(), input.endDate()));
+        DayParts parts = input.dayParts();
+        request.edit(type.getId(), input.startDate(), input.endDate(), parts, input.representativeId(),
+                input.comment(), Instant.now(clock));
+        request.replaceDays(rules.calculateDays(request.getEmployeeId(), type, input.startDate(), input.endDate(),
+                parts));
         audit.record("ABSENCE_DRAFT_UPDATED", BUSINESS_OBJECT_TYPE, request.getId(), before, snapshot(request, type));
         return request;
     }
@@ -151,9 +169,10 @@ public class AbsenceService {
         UUID employeeId = request.getEmployeeId();
 
         // Recalculate: the schedule or holiday calendar may have changed since the draft was saved.
-        List<CalculatedDay> days = rules.calculateDays(employeeId, type, request.getStartDate(), request.getEndDate());
+        List<CalculatedDay> days = rules.calculateDays(employeeId, type, request.getStartDate(), request.getEndDate(),
+                request.getDayParts());
         List<Issue> issues = rules.check(employeeId, type, request.getStartDate(), request.getEndDate(),
-                request.getRepresentativeEmployeeId(), days, request.getId()).stream()
+                request.getDayParts(), request.getRepresentativeEmployeeId(), days, request.getId()).stream()
                 .filter(i -> i.code() != ErrorCode.ATTACHMENT_REQUIRED
                         || !documents.hasDocuments(BUSINESS_OBJECT_TYPE, request.getId()))
                 .toList();
@@ -320,7 +339,7 @@ public class AbsenceService {
     private StepSpec approvalStep(AbsenceRequest request, LeaveType type, String employeeName, String stepType,
                                   String title) {
         String description = employeeName + ": " + type.getName() + ", " + period(request) + " ("
-                + request.workingDays() + " working day(s))";
+                + request.workingDays().stripTrailingZeros().toPlainString() + " working day(s))";
         List<UUID> approvers = employees.approversOf(request.getEmployeeId(), ApprovalType.ABSENCE,
                 LocalDate.now(clock));
         // No configured approver: HR handles the request instead of it getting stuck.
@@ -367,8 +386,14 @@ public class AbsenceService {
     }
 
     static String period(AbsenceRequest r) {
-        return r.getStartDate().equals(r.getEndDate()) ? r.getStartDate().format(DATE)
-                : r.getStartDate().format(DATE) + " – " + r.getEndDate().format(DATE);
+        DayParts parts = r.getDayParts();
+        String start = r.getStartDate().format(DATE) + half(parts.start());
+        return r.getStartDate().equals(r.getEndDate()) ? start
+                : start + " – " + r.getEndDate().format(DATE) + half(parts.end());
+    }
+
+    private static String half(DayPart part) {
+        return part.isHalf() ? " (" + part.name().toLowerCase() + ")" : "";
     }
 
     private static String reason(String comment) {
@@ -380,6 +405,9 @@ public class AbsenceService {
         m.put("leaveType", type.getCode());
         m.put("startDate", r.getStartDate());
         m.put("endDate", r.getEndDate());
+        if (!r.getDayParts().isFull()) {
+            m.put("dayParts", r.getDayParts().start() + "/" + r.getDayParts().end());
+        }
         m.put("status", r.getStatus());
         return m;
     }

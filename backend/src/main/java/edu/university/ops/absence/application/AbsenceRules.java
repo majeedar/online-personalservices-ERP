@@ -7,6 +7,7 @@ import edu.university.ops.absence.domain.AbsenceRepositories.AbsenceRequestRepos
 import edu.university.ops.absence.domain.AbsenceRepositories.LeaveEntitlementRepository;
 import edu.university.ops.absence.domain.AbsenceRequest;
 import edu.university.ops.absence.domain.AbsenceStatus;
+import edu.university.ops.absence.domain.DayParts;
 import edu.university.ops.absence.domain.LeaveEntitlement;
 import edu.university.ops.absence.domain.LeaveType;
 import edu.university.ops.calendar.HolidayCalendar;
@@ -51,11 +52,12 @@ public class AbsenceRules {
         }
     }
 
-    public List<CalculatedDay> calculateDays(UUID employeeId, LeaveType type, LocalDate start, LocalDate end) {
+    public List<CalculatedDay> calculateDays(UUID employeeId, LeaveType type, LocalDate start, LocalDate end,
+                                             DayParts parts) {
         AbsenceRequest.requireValidRange(start, end);
         List<WorkScheduleView> schedules = employees.workSchedules(employeeId);
         var holidaySet = holidays.holidaysBetween(start, end).keySet();
-        return AbsenceDayCalculator.calculate(start, end, type, date -> schedules.stream()
+        return AbsenceDayCalculator.calculate(start, end, parts, type, date -> schedules.stream()
                 .filter(s -> s.isValidOn(date))
                 .findFirst()
                 .map(s -> new DayPlan(s.targetMinutesOn(date.getDayOfWeek()), s.isWorkingDay(date.getDayOfWeek()))),
@@ -67,8 +69,8 @@ public class AbsenceRules {
      *
      * @param excludeRequestId the request itself when re-validating an existing one
      */
-    public List<Issue> check(UUID employeeId, LeaveType type, LocalDate start, LocalDate end, UUID representativeId,
-                             List<CalculatedDay> days, UUID excludeRequestId) {
+    public List<Issue> check(UUID employeeId, LeaveType type, LocalDate start, LocalDate end, DayParts parts,
+                             UUID representativeId, List<CalculatedDay> days, UUID excludeRequestId) {
         List<Issue> issues = new ArrayList<>();
         if (!type.isActive()) {
             issues.add(new Issue(ErrorCode.LEAVE_TYPE_INACTIVE, "This leave type can no longer be requested."));
@@ -83,7 +85,7 @@ public class AbsenceRules {
                     "No employment relationship covers the whole requested period."));
         }
         boolean overlaps = requests.findOverlapping(employeeId, AbsenceStatus.BLOCKING, start, end).stream()
-                .anyMatch(r -> !r.getId().equals(excludeRequestId));
+                .anyMatch(r -> !r.getId().equals(excludeRequestId) && conflicts(r, start, end, parts));
         if (overlaps) {
             issues.add(new Issue(ErrorCode.ABSENCE_OVERLAP,
                     "The requested absence overlaps with an existing request."));
@@ -120,6 +122,21 @@ public class AbsenceRules {
             issues.add(new Issue(ErrorCode.ATTACHMENT_REQUIRED, "This leave type requires an attachment."));
         }
         return issues;
+    }
+
+    /**
+     * Two requests conflict if they share a date, unless on every shared date one covers
+     * the morning and the other the afternoon (ADR-018).
+     */
+    static boolean conflicts(AbsenceRequest existing, LocalDate start, LocalDate end, DayParts parts) {
+        LocalDate from = start.isAfter(existing.getStartDate()) ? start : existing.getStartDate();
+        LocalDate to = end.isBefore(existing.getEndDate()) ? end : existing.getEndDate();
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+            if (!parts.on(date, start, end).complements(existing.dayPartOn(date))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void enforce(List<Issue> issues) {

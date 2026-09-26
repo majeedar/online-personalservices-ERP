@@ -137,9 +137,9 @@ See [docs/demo-script.md](docs/demo-script.md) for the full 10–15 minute walkt
 ## Tests
 
 ```bash
-cd backend && mvn test                         # 73 tests: architecture, unit, integration on real PostgreSQL
+cd backend && mvn test                         # 79 tests: architecture, unit, integration on real PostgreSQL
 cd mock-erp && mvn test                        # 3 tests
-cd frontend && npm test -- --watch=false       # 23 Vitest unit/component tests
+cd frontend && npm test -- --watch=false       # 25 Vitest unit/component tests
 cd frontend && npx playwright install chromium && npx playwright test   # 5 end-to-end scenarios (needs a running stack)
 ```
 
@@ -170,6 +170,5 @@ Secrets come from the environment ([.env.example](.env.example)); none are commi
   - 30 leave days, pro rata by working days per week;
   - 10 days carry-over expiring 31 March, with the expiry informational until the yearly job runs;
   - statutory breaks as in German law.
-- Leave is requested in whole days; there are no half days.
 - Roles are resolved at login, so a role change applies at the next login.
 - The UI is English only; there is no DE/EN switch. Optional enhancements (AGENT.md §93), such as a BPMN engine, Keycloak, MinIO and WebSockets, are not implemented.

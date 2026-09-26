@@ -10,6 +10,7 @@ PostgreSQL 17. The schema is created by Flyway migrations in [backend/src/main/r
 | `V4__travel_integration_batch.sql` | funding sources, travel requests, fundings, expenses, integration runs/errors, outbox, batch runs/errors |
 | `V5__time_month_closing.sql` | monthly closing of time accounts (one active closing per month, history kept) |
 | `V6__data_retention.sql` | `anonymised_at` on absence, travel and time-correction requests; indexes for the retention job |
+| `V7__half_day_absence.sql` | `start_day_part` / `end_day_part` on absence requests, `day_part` on absence days (ADR-018) |
 
 Demo data is loaded only by the `demo` profile (`db/seed/R__*.sql`, repeatable and idempotent), see ADR-009.
 

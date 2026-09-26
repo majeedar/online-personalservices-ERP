@@ -93,11 +93,70 @@ class AbsenceDomainTest {
     }
 
     @Nested
+    class HalfDays {
+
+        @Test
+        void halfDayDeductsHalfAndCreditsHalfTheTarget() {
+            LocalDate monday = LocalDate.of(2027, 3, 1);
+            CalculatedDay day = AbsenceDayCalculator.calculate(monday, monday,
+                    DayParts.of(monday, monday, DayPart.MORNING, null), ANNUAL, FULL_TIME, Set.of()).getFirst();
+            assertThat(day.part()).isEqualTo(DayPart.MORNING);
+            assertThat(day.plannedMinutes()).isEqualTo(240);
+            assertThat(day.creditedMinutes()).isEqualTo(240);
+            assertThat(day.entitlementDeduction()).isEqualByComparingTo("0.5");
+            assertThat(day.workingDayShare()).isEqualByComparingTo("0.5");
+        }
+
+        @Test
+        void multiDayAbsenceMayStartInTheAfternoonAndEndAtNoon() {
+            // Mon afternoon .. Wed morning = 0.5 + 1 + 0.5 days
+            LocalDate mon = LocalDate.of(2027, 3, 1);
+            LocalDate wed = LocalDate.of(2027, 3, 3);
+            List<CalculatedDay> days = AbsenceDayCalculator.calculate(mon, wed,
+                    DayParts.of(mon, wed, DayPart.AFTERNOON, DayPart.MORNING), ANNUAL, FULL_TIME, Set.of());
+            assertThat(days).extracting(CalculatedDay::part)
+                    .containsExactly(DayPart.AFTERNOON, DayPart.FULL, DayPart.MORNING);
+            assertThat(days.stream().map(CalculatedDay::entitlementDeduction).reduce(BigDecimal.ZERO, BigDecimal::add))
+                    .isEqualByComparingTo("2");
+        }
+
+        @Test
+        void halfDayOnANonWorkingDayCountsNothing() {
+            LocalDate saturday = LocalDate.of(2027, 3, 6);
+            CalculatedDay day = AbsenceDayCalculator.calculate(saturday, saturday,
+                    DayParts.of(saturday, saturday, DayPart.AFTERNOON, null), ANNUAL, FULL_TIME, Set.of()).getFirst();
+            assertThat(day.workingDayShare()).isEqualByComparingTo("0");
+            assertThat(day.entitlementDeduction()).isEqualByComparingTo("0");
+        }
+
+        @Test
+        void invalidDayPartsAreRejected() {
+            LocalDate mon = LocalDate.of(2027, 3, 1);
+            LocalDate tue = LocalDate.of(2027, 3, 2);
+            assertThatThrownBy(() -> DayParts.of(mon, tue, DayPart.MORNING, null))
+                    .isInstanceOf(BusinessException.class).hasMessageContaining("afternoon");
+            assertThatThrownBy(() -> DayParts.of(mon, tue, null, DayPart.AFTERNOON))
+                    .isInstanceOf(BusinessException.class);
+            assertThatThrownBy(() -> DayParts.of(mon, mon, DayPart.MORNING, DayPart.AFTERNOON))
+                    .isInstanceOf(BusinessException.class);
+            assertThat(DayParts.of(mon, mon, DayPart.FULL, DayPart.AFTERNOON))
+                    .isEqualTo(new DayParts(DayPart.AFTERNOON, DayPart.AFTERNOON));
+        }
+
+        @Test
+        void onlyMorningAndAfternoonComplementEachOther() {
+            assertThat(DayPart.MORNING.complements(DayPart.AFTERNOON)).isTrue();
+            assertThat(DayPart.MORNING.complements(DayPart.MORNING)).isFalse();
+            assertThat(DayPart.FULL.complements(DayPart.AFTERNOON)).isFalse();
+        }
+    }
+
+    @Nested
     class Lifecycle {
 
         AbsenceRequest draft() {
             AbsenceRequest r = AbsenceRequest.draft(UUID.randomUUID(), ANNUAL.getId(), LocalDate.of(2027, 3, 1),
-                    LocalDate.of(2027, 3, 5), null, null, Instant.EPOCH);
+                    LocalDate.of(2027, 3, 5), DayParts.FULL, null, null, Instant.EPOCH);
             r.replaceDays(AbsenceDayCalculator.calculate(r.getStartDate(), r.getEndDate(), ANNUAL, FULL_TIME,
                     Set.of()));
             return r;
@@ -132,7 +191,7 @@ class AbsenceDomainTest {
         void recalculationUpdatesDaysInPlace() {
             AbsenceRequest r = draft();
             UUID firstDayId = r.getDays().getFirst().getId();
-            r.edit(ANNUAL.getId(), LocalDate.of(2027, 3, 1), LocalDate.of(2027, 3, 2), null, null, Instant.EPOCH);
+            r.edit(ANNUAL.getId(), LocalDate.of(2027, 3, 1), LocalDate.of(2027, 3, 2), DayParts.FULL, null, null, Instant.EPOCH);
             r.replaceDays(AbsenceDayCalculator.calculate(r.getStartDate(), r.getEndDate(), ANNUAL, FULL_TIME,
                     Set.of()));
             assertThat(r.getDays()).hasSize(2);
@@ -142,7 +201,7 @@ class AbsenceDomainTest {
         @Test
         void endBeforeStartIsRejected() {
             assertThatThrownBy(() -> AbsenceRequest.draft(UUID.randomUUID(), ANNUAL.getId(), LocalDate.of(2027, 3, 5),
-                    LocalDate.of(2027, 3, 1), null, null, Instant.EPOCH))
+                    LocalDate.of(2027, 3, 1), DayParts.FULL, null, null, Instant.EPOCH))
                     .isInstanceOf(BusinessException.class).hasMessageContaining("end date");
         }
     }

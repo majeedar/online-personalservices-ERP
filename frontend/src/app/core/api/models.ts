@@ -205,9 +205,13 @@ export type AbsenceStatus =
   | 'CANCEL_REQUESTED'
   | 'CANCELLED';
 
+/** Half days (ADR-018): a request may start in the afternoon and end at noon. */
+export type DayPart = 'FULL' | 'MORNING' | 'AFTERNOON';
+
 export interface AbsenceDay {
   date: string;
   kind: 'WORKING_DAY' | 'NON_WORKING_DAY' | 'HOLIDAY' | 'NO_SCHEDULE';
+  dayPart: DayPart;
   plannedMinutes: number;
   creditedMinutes: number;
   entitlementDeduction: number;
@@ -218,6 +222,8 @@ export interface AbsenceSummary {
   leaveType: LeaveType;
   startDate: string;
   endDate: string;
+  startDayPart: DayPart;
+  endDayPart: DayPart;
   status: AbsenceStatus;
   workingDays: number;
   deduction: number;
@@ -248,6 +254,8 @@ export interface AbsenceInput {
   leaveTypeId: string;
   startDate: string;
   endDate: string;
+  startDayPart?: DayPart;
+  endDayPart?: DayPart;
   representativeId?: string | null;
   comment?: string | null;
 }
@@ -279,6 +287,8 @@ export interface TeamAbsence {
   employee: PersonRef;
   startDate: string;
   endDate: string;
+  startDayPart: DayPart;
+  endDayPart: DayPart;
   status: AbsenceStatus;
   workingDays: number;
 }

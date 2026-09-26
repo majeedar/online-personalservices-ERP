@@ -30,6 +30,9 @@ public class AbsenceDay {
     @Enumerated(EnumType.STRING)
     private Kind dayKind;
 
+    @Enumerated(EnumType.STRING)
+    private DayPart dayPart = DayPart.FULL;
+
     protected AbsenceDay() {
     }
 
@@ -44,6 +47,7 @@ public class AbsenceDay {
         this.creditedMinutes = day.creditedMinutes();
         this.entitlementDeduction = day.entitlementDeduction();
         this.dayKind = day.kind();
+        this.dayPart = day.part();
     }
 
     public UUID getId() {
@@ -68,5 +72,14 @@ public class AbsenceDay {
 
     public Kind getDayKind() {
         return dayKind;
+    }
+
+    public DayPart getDayPart() {
+        return dayPart;
+    }
+
+    /** Working days this day contributes: 1, 0.5 or 0. */
+    public BigDecimal workingDayShare() {
+        return dayKind == Kind.WORKING_DAY ? dayPart.fraction() : BigDecimal.ZERO;
     }
 }

@@ -12,7 +12,7 @@
 ## Coverage of AGENT.md §64–67
 
 **Unit tests (§64)**
-- leave-day calculation: part-time, holidays, flex and sick leave, no schedule (`AbsenceDomainTest`);
+- leave-day calculation: part-time, holidays, flex and sick leave, no schedule, half days and day-part rules (`AbsenceDomainTest`);
 - entitlement ledger (`AbsenceDomainTest.Entitlement`);
 - workflow transitions (`AbsenceDomainTest.Lifecycle`);
 - time calculation: breaks, statutory break, absence credit, open shift (`TimeDomainTest`);
@@ -23,7 +23,7 @@
 
 **Integration tests (§65)**
 - `FoundationIntegrationTest`: migrations and seed, login and CSRF, error format and correlation IDs, audit trigger;
-- `AbsenceScenarioTest`: Scenarios 1 and 2, all validation rules, return, reject, cancellation, sick leave, delegation, concurrency;
+- `AbsenceScenarioTest`: Scenarios 1 and 2, all validation rules, half days sharing a date, return, reject, cancellation, sick leave, delegation, concurrency;
 - `TimeScenarioTest`: Scenarios 5 and 6, absence credit;
 - `TimeClosingTest`: monthly closing: guards, frozen days, rejected corrections, reopening, scheduler idempotency, permissions;
 - `DataRetentionTest`: anonymisation after the retention period (comments, representative, attachments, decision comments), recent requests untouched, audit entry, idempotent rerun;

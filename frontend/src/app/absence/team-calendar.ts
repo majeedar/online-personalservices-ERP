@@ -7,12 +7,12 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { TeamAbsence } from '../core/api/models';
-import { isoDate, parseIsoDate } from '../core/format';
+import { halfDaySuffix, isoDate, parseIsoDate } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
 
 interface Row {
   name: string;
-  cells: { date: string; state: 'approved' | 'pending' | 'weekend' | 'free' }[];
+  cells: { date: string; state: 'approved' | 'pending' | 'weekend' | 'free'; half: boolean }[];
 }
 
 /**
@@ -44,6 +44,7 @@ interface Row {
           <span class="cell approved">A</span> approved
           <span class="cell pending">P</span> pending
           <span class="cell weekend"></span> weekend
+          <span>½ half day</span>
         </p>
         <div class="table-scroll">
           <table class="calendar">
@@ -61,8 +62,8 @@ interface Row {
                 <tr>
                   <th scope="row">{{ row.name }}</th>
                   @for (c of row.cells; track c.date) {
-                    <td class="cell {{ c.state }}" [attr.aria-label]="c.state === 'approved' ? 'absent' : c.state === 'pending' ? 'absence pending' : null">
-                      {{ c.state === 'approved' ? 'A' : c.state === 'pending' ? 'P' : '' }}
+                    <td class="cell {{ c.state }}" [attr.aria-label]="c.state === 'approved' ? 'absent' + (c.half ? ' half day' : '') : c.state === 'pending' ? 'absence pending' + (c.half ? ' half day' : '') : null">
+                      {{ c.state === 'approved' ? 'A' : c.state === 'pending' ? 'P' : '' }}{{ c.half && (c.state === 'approved' || c.state === 'pending') ? '½' : '' }}
                     </td>
                   }
                 </tr>
@@ -84,8 +85,8 @@ interface Row {
             @for (a of absences(); track a.requestId) {
               <tr>
                 <td><a [routerLink]="['/absence', a.requestId]">{{ a.employee.displayName }}</a></td>
-                <td>{{ a.startDate | date: 'mediumDate' }}</td>
-                <td>{{ a.endDate | date: 'mediumDate' }}</td>
+                <td>{{ a.startDate | date: 'mediumDate' }}{{ halfDaySuffix(a.startDayPart) }}</td>
+                <td>{{ a.endDate | date: 'mediumDate' }}{{ halfDaySuffix(a.endDayPart) }}</td>
                 <td class="num">{{ a.workingDays }}</td>
                 <td><ops-status [status]="a.status" /></td>
               </tr>
@@ -115,6 +116,7 @@ export class TeamCalendar {
   protected readonly to = computed(() => new Date(this.from().getTime() + 27 * 86_400_000));
   protected readonly absences = signal<TeamAbsence[]>([]);
   protected readonly error = signal<string | null>(null);
+  protected readonly halfDaySuffix = halfDaySuffix;
 
   protected readonly days = computed(() => {
     const result: string[] = [];
@@ -138,7 +140,9 @@ export class TeamCalendar {
           const state = weekday === 0 || weekday === 6 ? 'weekend'
             : hit ? (hit.status === 'APPROVED' || hit.status === 'CANCEL_REQUESTED' ? 'approved' : 'pending')
             : 'free';
-          return { date, state };
+          const half = !!hit && ((hit.startDate === date && hit.startDayPart !== 'FULL')
+            || (hit.endDate === date && hit.endDayPart !== 'FULL'));
+          return { date, state, half };
         }),
       }));
   });

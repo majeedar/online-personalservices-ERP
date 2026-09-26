@@ -8,7 +8,7 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../core/api/api.service';
 import { describeError } from '../core/api/api-error';
 import { AbsenceSummary, LeaveBalance } from '../core/api/models';
-import { formatDays } from '../core/format';
+import { formatDays, halfDaySuffix } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
 
 @Component({
@@ -71,8 +71,8 @@ import { StatusChip } from '../shared/status-chip';
                 @for (r of requests(); track r.id) {
                   <tr>
                     <td><a [routerLink]="['/absence', r.id]">{{ r.leaveType.name }}</a></td>
-                    <td>{{ r.startDate | date: 'mediumDate' }}</td>
-                    <td>{{ r.endDate | date: 'mediumDate' }}</td>
+                    <td>{{ r.startDate | date: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}</td>
+                    <td>{{ r.endDate | date: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}</td>
                     <td class="num">{{ r.workingDays }}</td>
                     <td class="num">{{ r.deduction }}</td>
                     <td><ops-status [status]="r.status" /></td>
@@ -95,6 +95,7 @@ export class AbsenceList {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly formatDays = formatDays;
+  protected readonly halfDaySuffix = halfDaySuffix;
 
   constructor() {
     void this.load();
