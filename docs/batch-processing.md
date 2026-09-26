@@ -13,6 +13,7 @@ Batch jobs implement `shared.batch.BatchJob` in the module that owns the data. `
 | `time-month-closing` | 04:00 on the 10th | time | Close the previous month's time accounts (freeze); FAILED with the reason if corrections are still pending |
 | `workflow-reminder` | 07:00 Mon–Fri | shared/workflow | Remind approvers (and delegates / role holders) of tasks older than `reminder-after-days` |
 | `integration-retry` | every 15 min | shared/integration | Deliver outbox exports whose backoff has elapsed |
+| `data-retention` | 03:30 on Sundays | shared/retention + modules | Anonymise finished absence, travel and time-correction requests after their retention period (free text, representative, decision comments, attachments); delete old notifications. Periods in `ops.retention`. |
 
 Incremental jobs read "changed since" the start of their last successful run (`Context.lastSuccessfulRun()`).
 

@@ -50,6 +50,10 @@ public final class AbsenceRepositories {
 
         List<AbsenceRequest> findByEmployeeIdAndStatusIn(UUID employeeId, Collection<AbsenceStatus> statuses);
 
+        /** Finished, not yet anonymised requests that ended before {@code endedBefore} (retention). */
+        List<AbsenceRequest> findByStatusInAndEndDateBeforeAndAnonymisedAtIsNull(Collection<AbsenceStatus> statuses,
+                                                                              LocalDate endedBefore);
+
         long count();
     }
 }

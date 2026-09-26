@@ -245,6 +245,23 @@ public class WorkflowService {
                 .toList();
     }
 
+    /** Retention: removes decision comments of all workflows of a business object; returns the count. */
+    public int removeDecisionComments(String businessObjectType, UUID businessObjectId) {
+        int removed = 0;
+        for (WorkflowInstance i : instances.findByBusinessObjectTypeAndBusinessObjectIdOrderByCreatedAt(
+                businessObjectType, businessObjectId)) {
+            for (WorkflowStep s : i.getSteps()) {
+                for (ApprovalDecision d : s.getDecisions()) {
+                    if (d.getComment() != null) {
+                        d.removeComment();
+                        removed++;
+                    }
+                }
+            }
+        }
+        return removed;
+    }
+
     /** Open tasks older than the configured reminder threshold (used by the reminder batch job). */
     @Transactional(readOnly = true)
     public List<TaskView> overdueForReminder() {

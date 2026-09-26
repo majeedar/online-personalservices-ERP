@@ -30,10 +30,19 @@ class FileSystemDocumentStorage implements DocumentStorage {
 
     @Override
     public InputStream open(String storageReference) throws IOException {
-        // References are generated above; anything else is rejected to rule out path traversal.
+        return Files.newInputStream(resolve(storageReference));
+    }
+
+    @Override
+    public void delete(String storageReference) throws IOException {
+        Files.deleteIfExists(resolve(storageReference));
+    }
+
+    /** References are generated above; anything else is rejected to rule out path traversal. */
+    private Path resolve(String storageReference) throws IOException {
         if (!REFERENCE.matcher(storageReference).matches()) {
             throw new IOException("Invalid storage reference");
         }
-        return Files.newInputStream(root.resolve(storageReference));
+        return root.resolve(storageReference);
     }
 }

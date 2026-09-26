@@ -240,6 +240,8 @@ export interface AbsenceDetail extends AbsenceSummary {
     taskId?: string;
     decideAsDelegate: boolean;
   };
+  /** Set when personal details were removed after the retention period. */
+  anonymisedAt?: string;
 }
 
 export interface AbsenceInput {

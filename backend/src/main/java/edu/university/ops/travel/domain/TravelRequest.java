@@ -62,6 +62,7 @@ public class TravelRequest {
     private Instant createdAt;
     private Instant submittedAt;
     private Instant updatedAt;
+    private Instant anonymisedAt;
 
     @Version
     private Long version;
@@ -163,6 +164,21 @@ public class TravelRequest {
         expenses.forEach(TravelExpense::accept);
         this.settledAmount = totalExpenses();
         return settledAmount;
+    }
+
+    /**
+     * Retention (AGENT.md §82): removes the comment, expense descriptions and receipt
+     * links. Purpose, destination, dates, amounts and ERP references are accounting
+     * records and stay.
+     */
+    public void anonymise(Instant now) {
+        this.comment = null;
+        this.expenses.forEach(TravelExpense::anonymise);
+        this.anonymisedAt = now;
+    }
+
+    public Instant getAnonymisedAt() {
+        return anonymisedAt;
     }
 
     public void recordTravelExport(String reference) {

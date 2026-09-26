@@ -37,6 +37,10 @@ public final class TravelPorts {
 
         List<TravelRequest> findByStatusIn(Collection<TravelStatus> statuses);
 
+        /** Finished, not yet anonymised trips that ended before {@code endedBefore} (retention). */
+        List<TravelRequest> findByStatusInAndEndDateTimeBeforeAndAnonymisedAtIsNull(Collection<TravelStatus> statuses,
+                                                                                 Instant endedBefore);
+
         List<TravelRequest> findAll();
 
         long count();

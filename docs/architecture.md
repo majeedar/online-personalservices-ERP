@@ -159,6 +159,10 @@ Dependencies point inward: `api → application → domain ← persistence / int
 **Decision:** Closing a month recalculates and then freezes every day of it (`time_account_day.status = CLOSED`). The stored values become authoritative, and corrections and backdated bookings are rejected until the month is reopened (with a reason, audited). Absence changes that touch a closed month are not applied automatically; time admins are notified instead.
 **Why:** Payroll and reporting need stable monthly figures. A derived-only model (ADR-014) would silently change closed figures whenever an input changed.
 
+### ADR-017 Data retention anonymises, it does not delete
+**Decision:** The `data-retention` job (`shared/retention`) runs one `RetentionTask` per module (absence, travel, time corrections, notifications). A task clears personal free text, representatives, decision comments and attachments of finished requests older than the configured period, and sets `anonymised_at`. Rows, status, dates and amounts stay.
+**Why:** Entitlements, time accounts, reports and ERP exports reference these rows. Deleting them would change historical balances and break reconciliation. Personal detail beyond what these need is what data protection asks us to remove. Keeping the tasks inside the modules means `shared` does not depend on business modules (ADR-001).
+
 ## 6. Security model (summary — details in [security.md](security.md))
 
 | Layer | Mechanism |

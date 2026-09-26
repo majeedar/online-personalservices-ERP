@@ -98,7 +98,7 @@ final class AbsenceDtos {
                            LocalDate endDate, PersonRef representative, String comment, AbsenceStatus status,
                            long workingDays, BigDecimal deduction, Instant createdAt, Instant submittedAt,
                            List<DayResponse> days, List<InstanceHistory> history, List<DocumentResponse> documents,
-                           AllowedActions actions) {
+                           AllowedActions actions, Instant anonymisedAt) {
     }
 
     record LeaveBalanceResponse(String leaveTypeCode, String leaveTypeName, int year, BigDecimal baseDays,

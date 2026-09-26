@@ -53,6 +53,9 @@ import { WorkflowTimeline } from '../shared/workflow-timeline';
         </div>
       </header>
 
+      @if (r.anonymisedAt) {
+        <p class="info-banner"><mat-icon aria-hidden="true">auto_delete</mat-icon> Comments, representative and attachments were removed on {{ r.anonymisedAt | date: 'mediumDate' }} after the retention period.</p>
+      }
       @if (r.actions.decideAsDelegate) {
         <p class="info-banner"><mat-icon aria-hidden="true">swap_horiz</mat-icon> You decide as a delegate; your decision is recorded on behalf of the assigned approver.</p>
       }

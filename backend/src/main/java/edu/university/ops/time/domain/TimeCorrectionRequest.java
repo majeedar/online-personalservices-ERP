@@ -47,6 +47,7 @@ public class TimeCorrectionRequest {
     private UUID workflowInstanceId;
     private Instant createdAt;
     private Instant decidedAt;
+    private Instant anonymisedAt;
 
     @Version
     private Long version;
@@ -79,6 +80,16 @@ public class TimeCorrectionRequest {
         }
         this.status = approved ? Status.APPROVED : Status.REJECTED;
         this.decidedAt = now;
+    }
+
+    /** Retention: the free-text reason is removed; the correction itself (what changed) stays. */
+    public void anonymise(Instant now) {
+        this.reason = "[removed after retention period]";
+        this.anonymisedAt = now;
+    }
+
+    public Instant getAnonymisedAt() {
+        return anonymisedAt;
     }
 
     public UUID getId() {

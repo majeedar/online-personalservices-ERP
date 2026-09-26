@@ -87,6 +87,24 @@ public class DocumentService {
                 .orElseThrow(() -> BusinessException.notFound(ErrorCode.RESOURCE_NOT_FOUND, "Document"));
     }
 
+    /**
+     * Retention: deletes all documents of a business object, content first, then
+     * metadata. Callers must first clear references to them (e.g. expense receipts).
+     */
+    public int deleteAll(String businessObjectType, UUID businessObjectId) {
+        int deleted = 0;
+        for (Document d : documentsOf(businessObjectType, businessObjectId)) {
+            try {
+                storage.delete(d.getStorageReference());
+            } catch (IOException e) {
+                throw new UncheckedIOException("Document content could not be deleted", e);
+            }
+            documents.delete(d);
+            deleted++;
+        }
+        return deleted;
+    }
+
     public InputStream open(Document document) {
         try {
             return storage.open(document.getStorageReference());

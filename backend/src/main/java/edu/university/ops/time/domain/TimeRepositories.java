@@ -60,6 +60,10 @@ public final class TimeRepositories {
 
         long countByStatusAndDateBetween(TimeCorrectionRequest.Status status, LocalDate from, LocalDate to);
 
+        /** Decided, not yet anonymised corrections for days before {@code before} (retention). */
+        List<TimeCorrectionRequest> findByStatusInAndDateBeforeAndAnonymisedAtIsNull(
+                Collection<TimeCorrectionRequest.Status> statuses, LocalDate before);
+
         long count();
     }
 

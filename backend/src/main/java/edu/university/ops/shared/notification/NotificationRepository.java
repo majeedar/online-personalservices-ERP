@@ -20,6 +20,10 @@ interface NotificationRepository extends Repository<Notification, UUID> {
 
     long countByStatus(Notification.DeliveryStatus status);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("delete from Notification n where n.createdAt < :before")
+    int deleteByCreatedAtBefore(@org.springframework.data.repository.query.Param("before") java.time.Instant before);
+
     boolean existsByRecipientEmployeeIdAndTypeAndBusinessObjectIdAndCreatedAtAfter(UUID recipientId,
                                                                                  NotificationType type,
                                                                                  UUID businessObjectId,

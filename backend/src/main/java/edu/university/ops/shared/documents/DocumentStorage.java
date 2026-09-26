@@ -13,4 +13,7 @@ public interface DocumentStorage {
     String store(InputStream content) throws IOException;
 
     InputStream open(String storageReference) throws IOException;
+
+    /** Removes the content; a missing file is not an error (deletion is idempotent). */
+    void delete(String storageReference) throws IOException;
 }

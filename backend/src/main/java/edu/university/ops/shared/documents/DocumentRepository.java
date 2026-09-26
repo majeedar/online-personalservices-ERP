@@ -14,4 +14,6 @@ interface DocumentRepository extends Repository<Document, UUID> {
     List<Document> findByBusinessObjectTypeAndBusinessObjectIdOrderByUploadedAt(String type, UUID id);
 
     boolean existsByBusinessObjectTypeAndBusinessObjectId(String type, UUID id);
+
+    void delete(Document document);
 }

@@ -26,6 +26,7 @@
 - `AbsenceScenarioTest`: Scenarios 1 and 2, all validation rules, return, reject, cancellation, sick leave, delegation, concurrency;
 - `TimeScenarioTest`: Scenarios 5 and 6, absence credit;
 - `TimeClosingTest`: monthly closing: guards, frozen days, rejected corrections, reopening, scheduler idempotency, permissions;
+- `DataRetentionTest`: anonymisation after the retention period (comments, representative, attachments, decision comments), recent requests untouched, audit entry, idempotent rerun;
 - `TravelScenarioTest`: Scenarios 3, 4 and 7, funding, cost centre, outage and retry, idempotency;
 - `OperationsTest`: organisation, employee, supervisor and schedule sync; entitlement and time jobs; reminders; health; reports.
 

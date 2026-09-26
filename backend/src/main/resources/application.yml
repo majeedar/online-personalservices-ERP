@@ -113,6 +113,13 @@ ops:
       time-month-closing: "0 0 4 10 * *"
       workflow-reminder: "0 0 7 * * MON-FRI"
       integration-retry: "0 */15 * * * *"
+      data-retention: "0 30 3 * * SUN"
+  # Retention periods in days after a record is finished (AGENT.md §82; placeholders for the records policy)
+  retention:
+    absence-days: 1095
+    travel-days: 3650
+    time-correction-days: 730
+    notification-days: 180
 
 logging:
   level:

@@ -41,6 +41,11 @@ public class ApprovalDecision {
         this.decidedAt = decidedAt;
     }
 
+    /** Retention: the free-text comment is personal data; the decision itself is kept. */
+    void removeComment() {
+        this.comment = null;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -71,6 +71,11 @@ public class NotificationService {
                 businessObjectId, since);
     }
 
+    /** Retention: deletes notifications created before the start of {@code day}; returns the count. */
+    public int deleteCreatedBefore(java.time.LocalDate day) {
+        return notifications.deleteByCreatedAtBefore(day.atStartOfDay(clock.getZone()).toInstant());
+    }
+
     @Transactional(readOnly = true)
     public long failedDeliveries() {
         return notifications.countByStatus(Notification.DeliveryStatus.FAILED);

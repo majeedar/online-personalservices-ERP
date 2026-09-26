@@ -46,6 +46,7 @@ public class AbsenceRequest {
     private Instant createdAt;
     private Instant submittedAt;
     private Instant updatedAt;
+    private Instant anonymisedAt;
 
     @Version
     private Long version;
@@ -168,6 +169,20 @@ public class AbsenceRequest {
         }
         this.status = target;
         this.updatedAt = now;
+    }
+
+    /**
+     * Retention (AGENT.md §82): removes personal free text and the representative.
+     * Dates, days and status stay, because entitlements and time accounts rely on them.
+     */
+    public void anonymise(Instant now) {
+        this.comment = null;
+        this.representativeEmployeeId = null;
+        this.anonymisedAt = now;
+    }
+
+    public Instant getAnonymisedAt() {
+        return anonymisedAt;
     }
 
     // ---------------------------------------------------------------- queries

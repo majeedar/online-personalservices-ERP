@@ -62,6 +62,12 @@ public class TravelExpense {
         this.status = Status.ACCEPTED;
     }
 
+    /** Retention: the free-text description and the receipt link go; type, date and amount stay. */
+    void anonymise() {
+        this.description = null;
+        this.receiptDocumentId = null;
+    }
+
     public UUID getId() {
         return id;
     }

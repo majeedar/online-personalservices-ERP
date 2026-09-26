@@ -190,6 +190,6 @@ class AbsenceController {
                 r.getSubmittedAt(), r.getDays().stream().map(DayResponse::of).toList(), queries.history(r),
                 documents.documentsOf(AbsenceService.BUSINESS_OBJECT_TYPE, r.getId()).stream()
                         .map(DocumentResponse::of).toList(),
-                actions);
+                actions, r.getAnonymisedAt());
     }
 }
