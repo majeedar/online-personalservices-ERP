@@ -1,5 +1,7 @@
 # Online Personalservices
 
+[![CI](https://github.com/majeedar/online-personalservices-ERP/actions/workflows/ci.yml/badge.svg)](https://github.com/majeedar/online-personalservices-ERP/actions/workflows/ci.yml)
+
 A prototype employee self-service platform for a university administration:
 
 - **Abwesenheitsverwaltung:** leave and absence;
