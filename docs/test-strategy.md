@@ -7,7 +7,8 @@
 | Integration | Spring Boot test + MockMvc on **real PostgreSQL** (Testcontainers, or embedded when no Docker) | Flyway migrations and seed, repositories, transactions, REST APIs, security, batch jobs, integration error handling | `mvn test` |
 | mock-erp | Spring Boot test | idempotent postings, outages, wire format | `cd mock-erp && mvn test` |
 | Frontend unit | Vitest (Angular unit-test builder) | components and services with `HttpTestingController` | `cd frontend && npm test -- --watch=false` |
-| Translations | Node script | every text passed to `tr` has a German entry; unused entries are listed | `cd frontend && npm run i18n:check` |
+| Translations | Node script | every text passed to `tr` has a German entry; no template text or user-facing attribute (`aria-label`, `placeholder`, `title`, …) bypasses `tr`; unused entries are listed | `cd frontend && npm run i18n:check` |
+| Translation sweep | Playwright | every page and main dialog, per role, in the test language `pseudo` (dictionary texts shown as `⟦…⟧`): plain text left on screen fails the test, unless its element is marked `data-i18n-source="server"` / `"master-data"` (reported as the to-do list) or it is demo data matched by `e2e/i18n-baseline.json` | `cd frontend && npx playwright test i18n-sweep` |
 | End-to-end | Playwright (Chromium) | demo scenarios in a real browser against a running stack; fails on console errors; writes the README screenshots | `cd frontend && npx playwright test` |
 
 ## Coverage of AGENT.md §64–67

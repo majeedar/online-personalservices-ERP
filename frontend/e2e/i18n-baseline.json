@@ -1,0 +1,17 @@
+{
+  "data": [
+    "\\S+@\\S+",
+    "\\b(Erika|Stefan|Frieda|Hanna|Ernst|Tim|Tanja|Anton|Paula|Bettina|Nina|Clara|David|Emil|Greta|Jan|Mia|Otto)( (Mustermann|Beispiel|Finanz|Personal|Admin|Reise|Zeit|Pruefer|Teilzeit|Leitung|Halbtag|Muster|Probe|Test|Demo|Fiktiv|Platzhalter))?\\b",
+    "(^|(?<=· ))(auditor|cbeispiel|dmuster|employee|eprobe|erpadmin|finance|gtest|hradmin|jdemo|mfiktiv|nhalbtag|oplatzhalter|parttime|supervisor|timeadmin|travel|system)($|(?= ·))",
+    "\\b(Example University|Central Administration|Human Resources|IT Services|Faculty of (Humanities|Sciences)|Department of (History|Linguistics)|Institute of (Applied Physics|Computer Science))\\b|^Finance$",
+    "\\b(Hamburg|Leipzig|Heidelberg|Workshop on research data management|Conference talk on research software|Project meeting with partner institute|Forgot to clock out after the project meeting)\\b",
+    "\\b[A-Z]{1,5}-[A-Z0-9#-]*",
+    "\\bP\\d+\\b",
+    "\\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\b",
+    "^[A-Z][a-z]+(?:[A-Z][a-z]+)+$|^Session$",
+    "^[a-z]+(?:-[a-z]+)+$",
+    "\\b(EUR|USD|GBP|CHF)\\b|^(DE|EN|PSEUDO)$|\\((DE)\\)",
+    "\\b(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|JAN|FEB|MÄR|MÄRZ|APR|MAI|JUNI|JULI|AUG|SEPT|OKT|NOV|DEZ)\\b",
+    "\\b(Mo|Di|Mi|Do|Fr|Sa|So)\\b\\.?"
+  ]
+}

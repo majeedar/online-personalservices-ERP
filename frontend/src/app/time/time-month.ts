@@ -69,7 +69,13 @@ import { I18N_PIPES } from '../core/i18n/pipes';
                   <td class="num">{{ d.targetMinutes ? formatMinutes(d.targetMinutes) : '—' }}</td>
                   <td class="num">{{ d.workedMinutes ? formatMinutes(d.workedMinutes) : '—' }}</td>
                   <td class="num">{{ d.breakMinutes ? formatMinutes(d.breakMinutes) : '—' }}</td>
-                  <td>{{ d.holidayName ?? (d.absenceType ? humanize(d.absenceType) : '') }}</td>
+                  <td>
+                    @if (d.holidayName) {
+                      <span data-i18n-source="master-data">{{ d.holidayName }}</span>
+                    } @else if (d.absenceType) {
+                      {{ humanize(d.absenceType) }}
+                    }
+                  </td>
                   <td class="num" [class.negative]="d.balanceMinutes < 0">{{ d.accounted ? formatBalance(d.balanceMinutes) : '' }}</td>
                   <td>
                     @if (d.incomplete && !d.future) {

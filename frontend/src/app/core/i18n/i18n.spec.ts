@@ -75,6 +75,14 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('de');
   });
 
+  it('brackets every dictionary text in the test language and leaves untranslated text plain', () => {
+    setLanguage('pseudo');
+    expect(tr('Working time')).toBe('⟦Wórkíñg tímé⟧');
+    expect(tr('Page {page}', { page: 3 })).toBe('⟦Págé 3⟧');
+    expect(humanize('IN_APPROVAL')).toBe('⟦Íñ Géñéhmígúñg⟧');
+    expect(tr('A text nobody translated')).toBe('A text nobody translated');
+  });
+
   it('has no empty German translations', () => {
     const empty = Object.entries(de as Record<string, string>).filter(([, v]) => !v.trim());
     expect(empty).toEqual([]);

@@ -16,11 +16,15 @@ export function formatBalance(minutes: number): string {
 
 /**
  * Label for an enum code: the translation `enum.<CODE>` if there is one, else
- * "STUDENT_ASSISTANT" -> "Student assistant".
+ * "STUDENT_ASSISTANT" -> "Student assistant". Combined codes ("ANNUAL_LEAVE/FLEX_DAY",
+ * two half days on one date) are labelled part by part.
  */
 export function humanize(code: string | null | undefined): string {
   if (!code) {
     return '';
+  }
+  if (code.includes('/')) {
+    return code.split('/').map(humanize).join(' / ');
   }
   const key = `enum.${code}`;
   if (hasTranslation(key)) {

@@ -77,7 +77,7 @@
       </mat-card-header>
       <mat-card-content>
         @if (upcoming(); as u) {
-          <p class="figure-sm"><a [routerLink]="['/absence', u.id]">{{ u.leaveType.name }}</a></p>
+          <p class="figure-sm"><a [routerLink]="['/absence', u.id]" data-i18n-source="master-data">{{ u.leaveType.name }}</a></p>
           <p>{{ u.startDate | ldate: 'mediumDate' }} – {{ u.endDate | ldate: 'mediumDate' }}</p>
         } @else {
           <p class="muted">{{ 'No approved absence ahead.' | tr }}</p>
@@ -111,7 +111,7 @@
     <mat-card-content>
       <ul class="plain">
         @for (n of notifications(); track n.id) {
-          <li [class.unread]="!n.read"><strong>{{ n.subject }}</strong> <span class="muted">· {{ n.createdAt | ldate: 'short' }}</span><br />{{ n.message }}</li>
+          <li [class.unread]="!n.read"><strong data-i18n-source="server">{{ n.subject }}</strong> <span class="muted">· {{ n.createdAt | ldate: 'short' }}</span><br /><span data-i18n-source="server">{{ n.message }}</span></li>
         } @empty {
           <li class="muted">{{ 'Nothing new.' | tr }}</li>
         }
@@ -153,7 +153,7 @@
       <mat-card-content>
         <ul class="plain">
           @for (c of h.components | keyvalue; track c.key) {
-            <li>{{ c.key }}: <ops-status [status]="c.value" /></li>
+            <li>{{ c.key | tr }}: <ops-status [status]="c.value" /></li>
           }
         </ul>
         <p>

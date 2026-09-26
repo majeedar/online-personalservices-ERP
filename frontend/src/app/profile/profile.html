@@ -103,7 +103,7 @@
             <tr>
               <td>{{ humanize(r.role) }}</td>
               <td>{{ r.validFrom | ldate: 'mediumDate' }}</td>
-              <td>{{ r.validTo ? (r.validTo | ldate: 'mediumDate') : 'open-ended' }}</td>
+              <td>{{ r.validTo ? (r.validTo | ldate: 'mediumDate') : ('open-ended' | tr) }}</td>
               <td>{{ (r.active ? 'Yes' : 'No') | tr }}</td>
             </tr>
           }

@@ -60,7 +60,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
                   @if (m.closed) {
                     {{ '{date} by {name} · {count} employees' | tr: { date: m.closedAt | ldate: 'medium', name: m.closedBy, count: m.employees } }}
                   } @else {
-                    <span class="muted">{{ m.blockedReason }}</span>
+                    <span class="muted" data-i18n-source="server">{{ m.blockedReason }}</span>
                   }
                 </td>
                 <td class="num" [class.negative]="m.pendingCorrections > 0">{{ m.pendingCorrections }}</td>

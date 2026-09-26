@@ -10,7 +10,17 @@ import { IntegrationErrorInfo, IntegrationRunInfo, SystemHealth } from '../core/
 import { AuthService } from '../core/auth/auth.service';
 import { humanize } from '../core/format';
 import { StatusChip } from '../shared/status-chip';
+import { marker } from '../core/i18n/i18n';
 import { I18N_PIPES } from '../core/i18n/pipes';
+
+/** Names of the system-health components sent by the server, translated with `tr`. */
+export const HEALTH_COMPONENTS = [
+  marker('Database'),
+  marker('Mail'),
+  marker('Personnel ERP'),
+  marker('Finance ERP'),
+  marker('Travel ERP'),
+];
 
 const SYSTEMS: Record<string, string> = {
   'Personnel ERP': 'PERSONNEL_ERP',
@@ -26,7 +36,7 @@ const SYSTEMS: Record<string, string> = {
     <header class="page-header">
       <div>
         <h1>{{ 'Integration monitor' | tr }}</h1>
-        <p>{{ 'Exports to the university\'s systems are retried automatically; failures stay here until resolved.' | tr }}</p>
+        <p>{{ "Exports to the university's systems are retried automatically; failures stay here until resolved." | tr }}</p>
       </div>
       <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon> {{ 'Refresh' | tr }}</button>
     </header>
@@ -38,7 +48,7 @@ const SYSTEMS: Record<string, string> = {
       <section class="cards" [attr.aria-label]="'System health' | tr">
         @for (c of h.components | keyvalue; track c.key) {
           <div class="tile">
-            <span class="muted">{{ c.key }}</span>
+            <span class="muted">{{ c.key | tr }}</span>
             <ops-status [status]="c.value" />
             @if (isAdmin() && systemCode(c.key); as code) {
               <mat-slide-toggle [checked]="c.value === 'DOWN'" (change)="outage(code, $event.checked)">{{ 'Simulate outage' | tr }}</mat-slide-toggle>
@@ -62,7 +72,7 @@ const SYSTEMS: Record<string, string> = {
               <tr>
                 <td>{{ e.createdAt | ldate: 'medium' }}</td>
                 <td>{{ e.externalReference ?? '—' }}</td>
-                <td><strong>{{ e.errorCode }}</strong><div class="muted">{{ e.errorMessage }}</div></td>
+                <td data-i18n-source="server"><strong>{{ e.errorCode }}</strong><div class="muted">{{ e.errorMessage }}</div></td>
                 <td class="num">{{ e.retryCount }}</td>
                 <td class="actions">
                   @if (e.retryable && canRetry()) {

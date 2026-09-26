@@ -119,7 +119,7 @@ const TRANSPORT: TransportMode[] = ['TRAIN', 'PUBLIC_TRANSPORT', 'CAR', 'FLIGHT'
                   <mat-label>{{ 'Funding source' | tr }}</mat-label>
                   <mat-select formControlName="fundingSourceId" required>
                     @for (s of sources(); track s.id) {
-                      <mat-option [value]="s.id">{{ s.costCentre }} {{ s.projectCode ?? '' }} – {{ s.description }}</mat-option>
+                      <mat-option [value]="s.id" data-i18n-source="master-data">{{ s.costCentre }} {{ s.projectCode ?? '' }} – {{ s.description }}</mat-option>
                     }
                   </mat-select>
                 </mat-form-field>

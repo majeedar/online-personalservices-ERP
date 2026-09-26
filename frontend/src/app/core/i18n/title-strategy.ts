@@ -24,6 +24,6 @@ export class I18nTitleStrategy extends TitleStrategy {
 
   private apply(): void {
     const app = 'Online Personalservices';
-    this.title.setTitle(this.page ? `${tr(this.page)} · ${app}` : app);
+    this.title.setTitle(this.page ? `${tr(this.page)} · ${tr(app)}` : tr(app));
   }
 }

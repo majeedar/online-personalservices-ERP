@@ -56,7 +56,7 @@ const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
               </button>
             }
           </div>
-          <h3>{{ 'Today\'s entries' | tr }}</h3>
+          <h3>{{ "Today's entries" | tr }}</h3>
           <ol class="entries">
             @for (e of today()?.entries ?? []; track e.id) {
               <li><time>{{ e.timestamp | ldate: 'HH:mm' }}</time> {{ humanize(e.type) }} <span class="muted">({{ humanize(e.source) }})</span></li>
@@ -68,7 +68,7 @@ const ACTIONS: { type: EntryType; label: string; icon: string }[] = [
       </mat-card>
 
       <mat-card appearance="outlined">
-        <mat-card-header><mat-card-title><h2>{{ 'Today\'s account' | tr }}</h2></mat-card-title></mat-card-header>
+        <mat-card-header><mat-card-title><h2>{{ "Today's account" | tr }}</h2></mat-card-title></mat-card-header>
         <mat-card-content>
           @if (today()?.account; as a) {
             <dl class="dl">

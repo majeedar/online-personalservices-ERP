@@ -1,6 +1,6 @@
 import { formatCurrency, formatDate, getCurrencySymbol } from '@angular/common';
 import { Pipe, PipeTransform } from '@angular/core';
-import { locale, tr } from './i18n';
+import { locale, markFormatted, tr } from './i18n';
 
 /*
  * The pipes are impure on purpose: they read the language signal, so a switch
@@ -25,7 +25,7 @@ export class LocalDatePipe implements PipeTransform {
     if (value === null || value === undefined || value === '') {
       return null;
     }
-    return formatDate(value, format, locale());
+    return markFormatted(formatDate(value, format, locale()));
   }
 }
 
@@ -36,11 +36,8 @@ export class LocalCurrencyPipe implements PipeTransform {
     if (value === null || value === undefined) {
       return null;
     }
-    return formatCurrency(
-      value,
-      locale(),
-      getCurrencySymbol(currency, 'narrow', locale()),
-      currency,
+    return markFormatted(
+      formatCurrency(value, locale(), getCurrencySymbol(currency, 'narrow', locale()), currency),
     );
   }
 }

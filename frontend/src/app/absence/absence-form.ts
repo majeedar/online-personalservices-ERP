@@ -3,7 +3,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { DateAdapter, provideNativeDateAdapter } from '@angular/material/core';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDatepickerIntl, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -16,6 +16,8 @@ import { AbsenceInput, AbsencePreview, DayPart, LeaveType, PersonRef } from '../
 import { formatDays, formatMinutes, halfDaySuffix, humanize, isoDate, parseIsoDate } from '../core/format';
 import { EmployeePicker } from '../shared/employee-picker';
 import { locale } from '../core/i18n/i18n';
+import { I18nDatepickerIntl } from '../core/i18n/datepicker-intl';
+import { LocaleDateAdapter } from '../core/i18n/date-adapter';
 import { I18N_PIPES } from '../core/i18n/pipes';
 
 /**
@@ -37,7 +39,11 @@ import { I18N_PIPES } from '../core/i18n/pipes';
     MatSelectModule,
     EmployeePicker,
   ],
-  providers: [provideNativeDateAdapter()],
+  providers: [
+    provideNativeDateAdapter(),
+    { provide: DateAdapter, useClass: LocaleDateAdapter },
+    { provide: MatDatepickerIntl, useClass: I18nDatepickerIntl },
+  ],
   template: `
     <header class="page-header">
       <div>
@@ -56,9 +62,9 @@ import { I18N_PIPES } from '../core/i18n/pipes';
           <form [formGroup]="form" (ngSubmit)="save(true)" novalidate>
             <mat-form-field appearance="outline" class="full">
               <mat-label>{{ 'Leave type' | tr }}</mat-label>
-              <mat-select formControlName="leaveTypeId" required>
+              <mat-select formControlName="leaveTypeId" required data-i18n-source="master-data">
                 @for (t of leaveTypes(); track t.id) {
-                  <mat-option [value]="t.id">{{ t.name }}</mat-option>
+                  <mat-option [value]="t.id" data-i18n-source="master-data">{{ t.name }}</mat-option>
                 }
               </mat-select>
               @if (selectedType(); as t) {

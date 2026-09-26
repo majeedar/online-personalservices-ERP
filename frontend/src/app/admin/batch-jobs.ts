@@ -38,7 +38,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
           <tbody>
             @for (j of jobs(); track j.name) {
               <tr>
-                <td><strong>{{ j.name }}</strong><div class="muted">{{ j.description }}</div></td>
+                <td><strong>{{ j.name }}</strong><div class="muted" data-i18n-source="server">{{ j.description }}</div></td>
                 <td><code>{{ j.schedule || ('manual' | tr) }}</code></td>
                 <td>
                   @if (j.lastRun; as r) {
