@@ -1,0 +1,6 @@
+# Store text files with LF so Docker images and CI (Linux) get the same files as Windows checkouts.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary
