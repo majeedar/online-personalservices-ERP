@@ -1,0 +1,189 @@
+package edu.university.ops.time.application;
+
+import edu.university.ops.absence.AbsenceEvents;
+import edu.university.ops.absence.AbsenceLookup;
+import edu.university.ops.absence.AbsenceLookup.AbsenceMinutes;
+import edu.university.ops.calendar.HolidayCalendar;
+import edu.university.ops.employee.EmployeeDirectory;
+import edu.university.ops.employee.EmployeeDirectory.WorkScheduleView;
+import edu.university.ops.shared.configuration.OpsProperties;
+import edu.university.ops.time.TimeAccounts;
+import edu.university.ops.time.domain.DailyTimeCalculator;
+import edu.university.ops.time.domain.TimeAccountDay;
+import edu.university.ops.time.domain.TimeCorrectionRequest;
+import edu.university.ops.time.domain.TimeEntry;
+import edu.university.ops.time.domain.TimeRepositories.TimeAccountDayRepository;
+import edu.university.ops.time.domain.TimeRepositories.TimeCorrectionRepository;
+import edu.university.ops.time.domain.TimeRepositories.TimeEntryRepository;
+import edu.university.ops.time.domain.TimeSequence.Event;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.modulith.events.ApplicationModuleListener;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Daily time accounts (AGENT.md §15.2–15.4). A day is always derivable from its
+ * inputs (entries, schedule, holidays, approved absences); the stored
+ * {@link TimeAccountDay} rows are kept current for reporting and batch jobs.
+ */
+@Service
+@Transactional
+public class TimeAccountService implements TimeAccounts {
+
+    /** Upper bound for on-the-fly range calculations. */
+    static final int MAX_RANGE_DAYS = 400;
+
+    private final TimeEntryRepository entries;
+    private final TimeAccountDayRepository accountDays;
+    private final TimeCorrectionRepository corrections;
+    private final EmployeeDirectory employees;
+    private final HolidayCalendar holidays;
+    private final AbsenceLookup absences;
+    private final OpsProperties properties;
+    private final Clock clock;
+
+    TimeAccountService(TimeEntryRepository entries, TimeAccountDayRepository accountDays,
+                       TimeCorrectionRepository corrections, EmployeeDirectory employees, HolidayCalendar holidays,
+                       AbsenceLookup absences, OpsProperties properties, Clock clock) {
+        this.entries = entries;
+        this.accountDays = accountDays;
+        this.corrections = corrections;
+        this.employees = employees;
+        this.holidays = holidays;
+        this.absences = absences;
+        this.properties = properties;
+        this.clock = clock;
+    }
+
+    public record DayView(LocalDate date, int targetMinutes, int workedMinutes, int breakMinutes, int absenceMinutes,
+                          int creditedMinutes, int balanceMinutes, String absenceType, String holidayName,
+                          boolean incomplete, boolean statutoryBreakApplied, TimeAccountDay.Status status,
+                          boolean future, boolean accounted) {
+    }
+
+    /** Calculates every day in [from, to] from its inputs, loading each input once for the whole range. */
+    @Transactional(readOnly = true)
+    public List<DayView> computeRange(UUID employeeId, LocalDate from, LocalDate to) {
+        if (to.isBefore(from) || from.plusDays(MAX_RANGE_DAYS).isBefore(to)) {
+            throw new IllegalArgumentException("Invalid range");
+        }
+        List<WorkScheduleView> schedules = employees.workSchedules(employeeId);
+        Map<LocalDate, String> holidayNames = holidays.holidaysBetween(from, to);
+        Map<LocalDate, AbsenceMinutes> absenceDays = absences.approvedAbsences(employeeId, from, to);
+        Map<LocalDate, List<TimeEntry>> entriesByDate = entries
+                .findByEmployeeIdAndBusinessDateBetweenAndVoidedAtIsNullOrderByTimestamp(employeeId, from, to).stream()
+                .collect(Collectors.groupingBy(TimeEntry::getBusinessDate));
+        Set<LocalDate> pendingCorrections = corrections
+                .findByEmployeeIdAndStatusAndDateBetween(employeeId, TimeCorrectionRequest.Status.IN_APPROVAL, from, to)
+                .stream().map(TimeCorrectionRequest::getDate).collect(Collectors.toSet());
+
+        // The time account starts with the employee's first booking (opening balance 0); earlier days
+        // show their target but do not count, so introducing time recording does not create a deficit.
+        LocalDate accountingStart = entries.findFirstByEmployeeIdAndVoidedAtIsNullOrderByBusinessDate(employeeId)
+                .map(TimeEntry::getBusinessDate).orElse(null);
+
+        LocalDate today = LocalDate.now(clock);
+        Instant now = Instant.now(clock);
+        List<DayView> result = new ArrayList<>();
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+            LocalDate d = date;
+            String holiday = holidayNames.get(d);
+            int target = holiday != null ? 0 : schedules.stream().filter(s -> s.isValidOn(d)).findFirst()
+                    .map(s -> s.targetMinutesOn(d.getDayOfWeek())).orElse(0);
+            AbsenceMinutes absence = absenceDays.get(d);
+            List<Event> events = entriesByDate.getOrDefault(d, List.of()).stream()
+                    .map(e -> new Event(e.getTimestamp(), e.getType())).toList();
+            boolean future = d.isAfter(today);
+            var calc = DailyTimeCalculator.calculate(events, target, absence == null ? 0 : absence.creditedMinutes(),
+                    d.equals(today) ? now : null, properties.time().statutoryBreaks());
+            TimeAccountDay.Status status = pendingCorrections.contains(d) ? TimeAccountDay.Status.CORRECTION_PENDING
+                    : (!d.isBefore(today) || calc.incomplete()) ? TimeAccountDay.Status.OPEN
+                    : TimeAccountDay.Status.CALCULATED;
+            // Future days carry their target but do not affect the balance yet.
+            boolean accounted = !future && accountingStart != null && !d.isBefore(accountingStart);
+            result.add(new DayView(d, target, calc.workedMinutes(), calc.breakMinutes(),
+                    absence == null ? 0 : absence.plannedMinutes(), calc.creditedMinutes(),
+                    accounted ? calc.balanceMinutes() : 0, absence == null ? null : absence.leaveTypeCode(), holiday,
+                    calc.incomplete(), calc.statutoryBreakApplied(), status, future, accounted));
+        }
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public DayView compute(UUID employeeId, LocalDate date) {
+        return computeRange(employeeId, date, date).getFirst();
+    }
+
+    /** Recalculates and stores past and current days of the range; returns the number stored. */
+    @Override
+    public int recalculate(UUID employeeId, LocalDate from, LocalDate to) {
+        LocalDate today = LocalDate.now(clock);
+        LocalDate end = to.isAfter(today) ? today : to;
+        if (end.isBefore(from)) {
+            return 0;
+        }
+        Instant now = Instant.now(clock);
+        int stored = 0;
+        for (DayView v : computeRange(employeeId, from, end)) {
+            TimeAccountDay day = accountDays.findByEmployeeIdAndDate(employeeId, v.date())
+                    .orElseGet(() -> new TimeAccountDay(employeeId, v.date()));
+            day.update(v.targetMinutes(), v.workedMinutes(), v.breakMinutes(), v.absenceMinutes(),
+                    v.creditedMinutes(), v.balanceMinutes(), v.status(), now);
+            accountDays.save(day);
+            stored++;
+        }
+        return stored;
+    }
+
+    public void recalculateDay(UUID employeeId, LocalDate date) {
+        recalculate(employeeId, date, date);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int balanceMinutes(UUID employeeId, LocalDate from, LocalDate to) {
+        return computeRange(employeeId, from, to).stream().mapToInt(DayView::balanceMinutes).sum();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MonthSummary monthSummary(UUID employeeId, YearMonth month) {
+        List<DayView> days = computeRange(employeeId, month.atDay(1), month.atEndOfMonth()).stream()
+                .filter(d -> !d.future()).toList();
+        return new MonthSummary(days.stream().mapToInt(DayView::targetMinutes).sum(),
+                days.stream().mapToInt(DayView::workedMinutes).sum(),
+                days.stream().mapToInt(DayView::absenceMinutes).sum(),
+                days.stream().mapToInt(DayView::creditedMinutes).sum(),
+                days.stream().mapToInt(DayView::balanceMinutes).sum(),
+                (int) days.stream().filter(DayView::incomplete).count());
+    }
+
+    // ------------------------------------------- absence integration (§15.4)
+
+    @ApplicationModuleListener
+    void on(AbsenceEvents.AbsenceApproved event) {
+        recalculateDates(event.employeeId(), event.dates());
+    }
+
+    @ApplicationModuleListener
+    void on(AbsenceEvents.AbsenceCancelled event) {
+        recalculateDates(event.employeeId(), event.dates());
+    }
+
+    private void recalculateDates(UUID employeeId, List<LocalDate> dates) {
+        if (!dates.isEmpty()) {
+            LocalDate from = dates.stream().min(LocalDate::compareTo).orElseThrow();
+            LocalDate to = dates.stream().max(LocalDate::compareTo).orElseThrow();
+            recalculate(employeeId, from, to);
+        }
+    }
+}

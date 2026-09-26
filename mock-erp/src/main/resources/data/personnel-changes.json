@@ -1,0 +1,38 @@
+[
+  {
+    "PERS_NR": "P10019", "VORNAME": "Lena", "NACHNAME": "Neu", "EMAIL": "lena.neu@uni.example", "USER_ID": "lneu",
+    "ORG_CODE": "INST-A1", "EMP_PERCENT": 100, "CONTRACT_ID": "EMP-P10019-1", "CONTRACT_START": "2026-09-01",
+    "CONTRACT_END": null, "CONTRACT_TYPE": "ACADEMIC", "WORK_DAYS": "MO,TU,WE,TH,FR", "SUPERVISOR_REF": "P10002",
+    "ACTIVE": true, "CHANGED_AT": "2026-09-01T06:00:00Z"
+  },
+  {
+    "PERS_NR": "P10012", "VORNAME": "Clara", "NACHNAME": "Beispiel", "EMAIL": "c.beispiel@uni.example",
+    "USER_ID": "cbeispiel", "ORG_CODE": "INST-A2", "EMP_PERCENT": 100, "CONTRACT_ID": "EMP-P10012-1",
+    "CONTRACT_START": "2021-02-27", "CONTRACT_END": null, "CONTRACT_TYPE": "ACADEMIC", "WORK_DAYS": "MO,TU,WE,TH,FR",
+    "SUPERVISOR_REF": "P10002", "ACTIVE": true, "CHANGED_AT": "2026-09-02T06:00:00Z"
+  },
+  {
+    "PERS_NR": "P10016", "VORNAME": "Jan", "NACHNAME": "Demo", "EMAIL": "jan.demo@uni.example", "USER_ID": "jdemo",
+    "ORG_CODE": "DEPT-B2", "EMP_PERCENT": 75, "CONTRACT_ID": "EMP-P10016-1", "CONTRACT_START": "2024-01-10",
+    "CONTRACT_END": null, "CONTRACT_TYPE": "ACADEMIC", "WORK_DAYS": "MO,TU,WE,TH", "SUPERVISOR_REF": "P10002",
+    "ACTIVE": true, "CHANGED_AT": "2026-09-03T06:00:00Z"
+  },
+  {
+    "PERS_NR": "P10020", "VORNAME": "Max", "NACHNAME": "Fehler", "EMAIL": "max.fehler@uni.example",
+    "USER_ID": "mfehler", "ORG_CODE": "XX-UNKNOWN", "EMP_PERCENT": 100, "CONTRACT_ID": "EMP-P10020-1",
+    "CONTRACT_START": "2026-10-01", "CONTRACT_END": null, "CONTRACT_TYPE": "TECHNICAL", "WORK_DAYS": "MO,TU,WE,TH,FR",
+    "SUPERVISOR_REF": "P10010", "ACTIVE": true, "CHANGED_AT": "2026-09-04T06:00:00Z"
+  },
+  {
+    "PERS_NR": "P10021", "VORNAME": "Ute", "NACHNAME": "Ungueltig", "EMAIL": "ute.ungueltig@uni.example",
+    "USER_ID": "uungueltig", "ORG_CODE": "ADM-HR", "EMP_PERCENT": 140, "CONTRACT_ID": "EMP-P10021-1",
+    "CONTRACT_START": "2026-10-01", "CONTRACT_END": null, "CONTRACT_TYPE": "ADMINISTRATIVE",
+    "WORK_DAYS": "MO,TU,WE,TH,FR", "SUPERVISOR_REF": "P10010", "ACTIVE": true, "CHANGED_AT": "2026-09-04T07:00:00Z"
+  },
+  {
+    "PERS_NR": "P10017", "VORNAME": "Mia", "NACHNAME": "Fiktiv", "EMAIL": "mia.fiktiv@uni.example",
+    "USER_ID": "mfiktiv", "ORG_CODE": "DEPT-B2", "EMP_PERCENT": 100, "CONTRACT_ID": "EMP-P10017-1",
+    "CONTRACT_START": "2020-10-10", "CONTRACT_END": "2026-08-31", "CONTRACT_TYPE": "STUDENT_ASSISTANT",
+    "WORK_DAYS": "MO,TU,WE,TH,FR", "SUPERVISOR_REF": "P10002", "ACTIVE": false, "CHANGED_AT": "2026-09-05T06:00:00Z"
+  }
+]

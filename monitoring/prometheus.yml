@@ -1,0 +1,8 @@
+# Scrapes the backend's Micrometer metrics over the internal Docker network.
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: online-personalservices
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["backend:8080"]

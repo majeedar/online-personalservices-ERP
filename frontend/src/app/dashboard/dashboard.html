@@ -1,0 +1,182 @@
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading dashboard" />
+}
+@if (error(); as message) {
+  <p class="error-banner" role="alert"><mat-icon aria-hidden="true">error</mat-icon> {{ message }}</p>
+}
+
+@if (me(); as me) {
+  <header class="page-header">
+    <div>
+      <h1>{{ greeting() }}, {{ me.firstName }}</h1>
+      <p>{{ me.displayName }} · {{ me.organisationUnit?.name }} · Personnel no. {{ me.personnelNumber }}</p>
+    </div>
+  </header>
+}
+
+<section class="cards" aria-label="Key figures">
+  @if (isEmployee()) {
+    <a class="card-link" routerLink="/absence">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar aria-hidden="true">beach_access</mat-icon>
+          <mat-card-title>Remaining leave</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (balance(); as b) {
+            <p class="figure">{{ formatDays(b.remainingDays) }}</p>
+            <p class="muted">{{ b.year }} · {{ b.reservedDays }} pending</p>
+          } @else {
+            <p class="muted">No entitlement.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </a>
+    <a class="card-link" routerLink="/time">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar aria-hidden="true">schedule</mat-icon>
+          <mat-card-title>Working-time balance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (timeBalance(); as t) {
+            <p class="figure" [class.negative]="t.month < 0">{{ formatBalance(t.month) }}</p>
+            <p class="muted">this month · {{ formatBalance(t.year) }} this year</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </a>
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar aria-hidden="true">pending_actions</mat-icon>
+        <mat-card-title>Open requests</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="figure">{{ openRequests() }}</p>
+        <p class="muted">awaiting a decision</p>
+      </mat-card-content>
+    </mat-card>
+  }
+  <a class="card-link" routerLink="/tasks">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar aria-hidden="true">task_alt</mat-icon>
+        <mat-card-title>Open approval tasks</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="figure">{{ taskCount() ?? '—' }}</p>
+        <p class="muted">for you to decide</p>
+      </mat-card-content>
+    </mat-card>
+  </a>
+  @if (isEmployee()) {
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar aria-hidden="true">event_available</mat-icon>
+        <mat-card-title>Upcoming absence</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (upcoming(); as u) {
+          <p class="figure-sm"><a [routerLink]="['/absence', u.id]">{{ u.leaveType.name }}</a></p>
+          <p>{{ u.startDate | date: 'mediumDate' }} – {{ u.endDate | date: 'mediumDate' }}</p>
+        } @else {
+          <p class="muted">No approved absence ahead.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</section>
+
+<div class="grid-2">
+  @if (isEmployee()) {
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title><h2>Recent travel</h2></mat-card-title></mat-card-header>
+      <mat-card-content>
+        <ul class="plain">
+          @for (t of trips().slice(0, 4); track t.id) {
+            <li>
+              <a [routerLink]="['/travel', t.id]">{{ t.destinationCity }}</a> · {{ t.startDateTime | date: 'mediumDate' }}
+              · {{ t.estimatedCost | currency: t.currency }} <ops-status [status]="t.status" />
+            </li>
+          } @empty {
+            <li class="muted">No trips.</li>
+          }
+        </ul>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-card appearance="outlined">
+    <mat-card-header><mat-card-title><h2>Latest notifications</h2></mat-card-title></mat-card-header>
+    <mat-card-content>
+      <ul class="plain">
+        @for (n of notifications(); track n.id) {
+          <li [class.unread]="!n.read"><strong>{{ n.subject }}</strong> <span class="muted">· {{ n.createdAt | date: 'short' }}</span><br />{{ n.message }}</li>
+        } @empty {
+          <li class="muted">Nothing new.</li>
+        }
+      </ul>
+      <a mat-button routerLink="/notifications">All notifications</a>
+    </mat-card-content>
+  </mat-card>
+
+  @if (isSupervisor()) {
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title><h2>Team absences (next 2 weeks)</h2></mat-card-title></mat-card-header>
+      <mat-card-content>
+        <ul class="plain">
+          @for (a of team(); track a.requestId) {
+            <li>{{ a.employee.displayName }} · {{ a.startDate | date: 'd MMM' }} – {{ a.endDate | date: 'd MMM' }} <ops-status [status]="a.status" /></li>
+          } @empty {
+            <li class="muted">Everyone is in.</li>
+          }
+        </ul>
+        <a mat-button routerLink="/team/calendar">Team calendar</a>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (isHr()) {
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title><h2>HR overview</h2></mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p class="figure">{{ pendingApprovals() ?? '—' }}</p>
+        <p class="muted">approvals pending across the university</p>
+        <a mat-button routerLink="/reports">Reports</a>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (isOperator() && health(); as h) {
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title><h2>System health</h2></mat-card-title></mat-card-header>
+      <mat-card-content>
+        <ul class="plain">
+          @for (c of h.components | keyvalue; track c.key) {
+            <li>{{ c.key }}: <ops-status [status]="c.value" /></li>
+          }
+        </ul>
+        <p>
+          <strong [class.negative]="h.openIntegrationErrors > 0">{{ h.openIntegrationErrors }}</strong> open integration errors ·
+          <strong [class.negative]="h.failedBatchRunsLast24h > 0">{{ h.failedBatchRunsLast24h }}</strong> failed batch runs (24 h) ·
+          <strong>{{ h.pendingExports }}</strong> pending exports
+        </p>
+        <div class="actions">
+          <a mat-button routerLink="/admin/integrations">Integration monitor</a>
+          <a mat-button routerLink="/admin/batch">Batch jobs</a>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title><h2>Recent audit activity</h2></mat-card-title></mat-card-header>
+      <mat-card-content>
+        <ul class="plain">
+          @for (a of audit(); track a.id) {
+            <li>{{ a.timestamp | date: 'short' }} · {{ a.actorUsername }} · {{ humanize(a.action) }}</li>
+          }
+        </ul>
+        <a mat-button routerLink="/admin/audit">Audit log</a>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

@@ -1,0 +1,15 @@
+[
+  {
+    "ORG_CODE": "INST-A3", "ORG_ID": "ORG-0013", "ORG_NAME": "Institute of Mathematics", "ORG_TYPE": "INSTITUTE",
+    "PARENT_ORG": "FAC-A", "KOSTL": "CC-2300", "ACTIVE": true, "CHANGED_AT": "2026-09-01T05:00:00Z"
+  },
+  {
+    "ORG_CODE": "DEPT-B2", "ORG_ID": "ORG-0011", "ORG_NAME": "Department of Linguistics and Literature",
+    "ORG_TYPE": "DEPARTMENT", "PARENT_ORG": "FAC-B", "KOSTL": "CC-3200", "ACTIVE": true,
+    "CHANGED_AT": "2026-09-02T05:00:00Z"
+  },
+  {
+    "ORG_CODE": "LAB-X", "ORG_ID": "ORG-0099", "ORG_NAME": "Orphan Lab", "ORG_TYPE": "UNIT",
+    "PARENT_ORG": "DOES-NOT-EXIST", "KOSTL": "CC-9900", "ACTIVE": true, "CHANGED_AT": "2026-09-03T05:00:00Z"
+  }
+]

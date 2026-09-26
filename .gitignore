@@ -1,0 +1,19 @@
+.env
+# backend
+backend/target/
+build/
+backend/build/
+# frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+backend/data/
+frontend/test-results/
+frontend/playwright-report/
+mock-erp/target/

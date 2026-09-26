@@ -1,0 +1,5 @@
+# Container profile: JSON logs (ECS format) including the correlationId MDC key (AGENT.md §52).
+logging:
+  structured:
+    format:
+      console: ecs

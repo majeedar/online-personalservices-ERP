@@ -1,0 +1,81 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<mat-toolbar class="topbar" role="banner">
+  @if (handset()) {
+    <button mat-icon-button type="button" (click)="drawer.toggle()" aria-label="Toggle navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+  <span class="brand">
+    <mat-icon aria-hidden="true">account_balance</mat-icon>
+    Online Personalservices
+  </span>
+  <span class="spacer"></span>
+  @if (session(); as s) {
+    <a
+      mat-icon-button
+      routerLink="/notifications"
+      class="bell"
+      [attr.aria-label]="unread() ? unread() + ' unread notifications' : 'Notifications'"
+    >
+      <mat-icon>{{ unread() ? 'notifications_active' : 'notifications' }}</mat-icon>
+      @if (unread()) {
+        <span class="badge" aria-hidden="true">{{ unread() > 99 ? '99+' : unread() }}</span>
+      }
+    </a>
+    <button mat-button type="button" [matMenuTriggerFor]="userMenu" class="user-button">
+      <mat-icon aria-hidden="true">account_circle</mat-icon>
+      {{ s.displayName }}
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="menu-info" role="presentation">
+        <div class="menu-name">{{ s.displayName }}</div>
+        <div class="menu-roles">{{ roleLabels() }}</div>
+      </div>
+      <a mat-menu-item routerLink="/profile">
+        <mat-icon>badge</mat-icon>
+        <span>My profile</span>
+      </a>
+      <button mat-menu-item type="button" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Log out</span>
+      </button>
+    </mat-menu>
+  }
+</mat-toolbar>
+
+<mat-sidenav-container class="container">
+  <mat-sidenav
+    #drawer
+    [mode]="handset() ? 'over' : 'side'"
+    [opened]="!handset()"
+    class="sidenav"
+    role="navigation"
+    aria-label="Main navigation"
+  >
+    @for (group of navGroups(); track group.section) {
+      <h2 class="nav-section">{{ group.section }}</h2>
+      <mat-nav-list>
+        @for (item of group.items; track item.route) {
+          <a
+            mat-list-item
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            #rla="routerLinkActive"
+            [attr.aria-current]="rla.isActive ? 'page' : null"
+            (click)="handset() && drawer.close()"
+          >
+            <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    }
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <main id="main-content" class="content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

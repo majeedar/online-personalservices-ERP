@@ -1,0 +1,53 @@
+<main class="page">
+  <mat-card class="card" appearance="outlined">
+    @if (submitting()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Signing in" />
+    }
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="logo" aria-hidden="true">account_balance</mat-icon>
+      <mat-card-title><h1>Online Personalservices</h1></mat-card-title>
+      <mat-card-subtitle>Example University — employee self-service</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" autocomplete="username" required />
+          @if (form.controls.username.hasError('required')) {
+            <mat-error>Username is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="current-password" required />
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Password is required.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (error(); as message) {
+          <p class="error" role="alert">
+            <mat-icon aria-hidden="true">error</mat-icon>
+            {{ message }}
+          </p>
+        }
+
+        <button mat-flat-button type="submit" class="full" [disabled]="submitting()">Sign in</button>
+      </form>
+
+      <section class="demo" aria-labelledby="demo-heading">
+        <h2 id="demo-heading">Demo accounts</h2>
+        <p class="hint">Simulated university SSO. Every demo account uses the password <code>demo123</code>.</p>
+        <div class="demo-list">
+          @for (account of demoAccounts; track account.username) {
+            <button mat-stroked-button type="button" (click)="useDemoAccount(account.username)">
+              {{ account.label }}
+            </button>
+          }
+        </div>
+      </section>
+    </mat-card-content>
+  </mat-card>
+</main>

@@ -1,0 +1,87 @@
+# Starts the complete prototype: docker compose up --build
+# UI:      http://localhost:4200   (demo users: see README, password demo123)
+# Swagger: http://localhost:4200/swagger-ui.html
+# MailHog: http://localhost:8025
+# Optional monitoring: docker compose --profile monitoring up --build
+#          Prometheus http://localhost:9090, Grafana http://localhost:3000 (admin / admin)
+name: online-personalservices
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ops
+      POSTGRES_USER: ops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ops_local_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ops -d ops"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+
+  # Fictitious personnel, finance and travel ERP (ADR-007). Stop it to demonstrate an outage:
+  #   docker compose stop mock-erp
+  mock-erp:
+    build: ./mock-erp
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: demo,docker
+      DB_URL: jdbc:postgresql://postgres:5432/ops
+      DB_USERNAME: ops
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-ops_local_dev}
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      OPS_MAIL_ENABLED: "true"
+      OPS_TIMEZONE: ${OPS_TIMEZONE:-Europe/Berlin}
+      OPS_INTEGRATION_MODE: http
+      MOCK_ERP_URL: http://mock-erp:8090
+      OPS_DOCUMENTS_PATH: /var/lib/ops/documents
+    volumes:
+      - documents:/var/lib/ops/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-erp:
+        condition: service_started
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    profiles: [monitoring]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
+  documents:

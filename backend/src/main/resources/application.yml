@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: online-personalservices
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ops}
+    username: ${DB_USERNAME:ops}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that mappings match it (AGENT.md §30).
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.connectiontimeout: 3000
+      mail.smtp.timeout: 3000
+
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  health:
+    mail:
+      enabled: ${OPS_MAIL_ENABLED:false}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,modulith
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: ERP_ADMIN,SUPPORT
+  info:
+    env:
+      enabled: true
+  observations:
+    key-values:
+      application: online-personalservices
+
+info:
+  application:
+    name: Online Personalservices
+    description: University employee self-service prototype
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+ops:
+  timezone: ${OPS_TIMEZONE:Europe/Berlin}
+  holiday-region: ${OPS_HOLIDAY_REGION:DEFAULT}
+  identity:
+    provider: ${OPS_IDENTITY_PROVIDER:mock}
+  mail:
+    enabled: ${OPS_MAIL_ENABLED:false}
+    from: no-reply@uni.example
+  workflow:
+    task-due-days: 5
+    reminder-after-days: 3
+  documents:
+    path: ${OPS_DOCUMENTS_PATH:./data/documents}
+  integration:
+    # stub: in-memory ERP adapters; http: the mock-erp container (ADR-007)
+    mode: ${OPS_INTEGRATION_MODE:stub}
+    mock-erp-url: ${MOCK_ERP_URL:http://localhost:8090}
+    connect-timeout: 2s
+    read-timeout: 5s
+    retry-attempts: 3
+    retry-backoff: 200ms
+    outbox-max-attempts: 5
+    outbox-poll-interval: 5000
+    outbox-initial-delay: 10000
+  travel:
+    currencies: [EUR, USD, GBP, CHF]
+    financial-approval-threshold: 0
+    limit-funding-to-estimate: true
+    receipt-required-types: [TRAIN, FLIGHT, HOTEL, TAXI, CONFERENCE_FEE]
+    max-days-in-past: 30
+  batch:
+    enabled: ${OPS_BATCH_ENABLED:true}
+    # cron per job (seconds minutes hours day month weekday), "-" = manual only
+    schedules:
+      employee-sync: "0 0 2 * * *"
+      organisation-sync: "0 30 1 * * *"
+      supervisor-sync: "0 15 2 * * *"
+      work-schedule-sync: "0 30 2 * * *"
+      leave-entitlement-calculation: "0 0 3 1 1 *"
+      time-account-recalculation: "0 0 1 * * *"
+      workflow-reminder: "0 0 7 * * MON-FRI"
+      integration-retry: "0 */15 * * * *"
+
+logging:
+  level:
+    edu.university.ops: INFO

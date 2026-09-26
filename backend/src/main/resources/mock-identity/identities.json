@@ -1,0 +1,13 @@
+[
+  { "username": "employee",    "passwordHash": "$2a$10$F6R7.mRdsJvpishd5SEAcO7FZGxvgUB5S8cTuQYTrJsWSK/zCndCa", "displayName": "Erika Mustermann", "email": "employee@uni.example" },
+  { "username": "supervisor",  "passwordHash": "$2a$10$GDpTzNlvj4ENLMYdzmnuHOvSRhqLBXIFJdanwy09j0JxjwIRLPX7G", "displayName": "Stefan Beispiel",  "email": "supervisor@uni.example" },
+  { "username": "finance",     "passwordHash": "$2a$10$oUBl95WSMROSvpY8jvCZx.Rdcov2.GHKGqaJbVP36ywU6I/mhmz6i", "displayName": "Frieda Finanz",    "email": "finance@uni.example" },
+  { "username": "hradmin",     "passwordHash": "$2a$10$pg4X8g1VYzCzS4muoIgLBOUJNKr3Nl/0HkZFgrNEE.QCdmJ0ejmdy", "displayName": "Hanna Personal",   "email": "hradmin@uni.example" },
+  { "username": "erpadmin",    "passwordHash": "$2a$10$14C8VqLjonesd/DNaIGMHupiuAHcmLR95iUhtleq5xWmn2v5srdp6", "displayName": "Ernst Admin",      "email": "erpadmin@uni.example" },
+  { "username": "travel",      "passwordHash": "$2a$10$ZOt2o0HJ45NtF/7Jjqb79uBQOymR3e61oy8INcYKTetnnpT7tejyC", "displayName": "Tim Reise",        "email": "travel@uni.example" },
+  { "username": "timeadmin",   "passwordHash": "$2a$10$JmuqSmzjXRj4lEBvbkPDve0tZq44KGBtmg4dh1oClEkXMq6Xbap3a", "displayName": "Tanja Zeit",       "email": "timeadmin@uni.example" },
+  { "username": "auditor",     "passwordHash": "$2a$10$wqW15mjwXHQz4WHvIyD8lu.tsM1OZ0O2eal1JRDq/jxxouvP9S/Zi", "displayName": "Anton Pruefer",    "email": "auditor@uni.example" },
+  { "username": "parttime",    "passwordHash": "$2a$10$v0vuWFxm0HKX46h2k/31pOst0NwNFlp8h.Bcbimb/V.AUxr9mJz.e", "displayName": "Paula Teilzeit",   "email": "parttime@uni.example" },
+  { "username": "supervisor2", "passwordHash": "$2a$10$Sn.0kkamzKjJRjyWbwn6J.Ni4oU7bJhv8tUG66TpapSx2/72YKgrq", "displayName": "Bettina Leitung",  "email": "supervisor2@uni.example" },
+  { "username": "nhalbtag",    "passwordHash": "$2a$10$c7SnY0JSye7d7QqJj/c5ueidelGOlHCh5b0P9hMlQk2NVvyhqraNm", "displayName": "Nina Halbtag",     "email": "nina.halbtag@uni.example" }
+]

@@ -1,0 +1,10 @@
+# Integration tests: no timers, so tests control batch runs and outbox delivery explicitly.
+ops:
+  documents:
+    path: ${java.io.tmpdir}/ops-test-documents
+  integration:
+    retry-backoff: 1ms
+    outbox-poll-interval: 3600000
+    outbox-initial-delay: 3600000
+  batch:
+    enabled: false

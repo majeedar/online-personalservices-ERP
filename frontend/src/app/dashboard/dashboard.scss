@@ -1,0 +1,44 @@
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+
+  mat-card {
+    height: 100%;
+    transition: box-shadow 120ms;
+  }
+
+  &:hover mat-card,
+  &:focus-visible mat-card {
+    box-shadow: var(--mat-sys-level2);
+  }
+}
+
+.figure-sm {
+  font: var(--mat-sys-title-medium);
+  margin: 12px 0 4px;
+}
+
+mat-card-content p {
+  margin: 4px 0;
+}
+
+.plain {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+
+  li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  li.unread strong {
+    color: var(--mat-sys-primary);
+  }
+}
+
+h2 {
+  font: var(--mat-sys-title-medium);
+  margin: 0;
+}

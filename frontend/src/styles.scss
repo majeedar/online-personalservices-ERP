@@ -1,0 +1,223 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
+// ---------------------------------------------------------------------------
+// Semantic status tokens (AGENT.md §89). Components use these variables only;
+// status is always shown with text and/or an icon as well, never colour alone.
+// ---------------------------------------------------------------------------
+:root {
+  --ops-status-draft: var(--mat-sys-outline);
+  --ops-status-pending: #8a5a00;
+  --ops-status-approved: #1b6c35;
+  --ops-status-rejected: var(--mat-sys-error);
+  --ops-status-failed: var(--mat-sys-error);
+  --ops-status-completed: #1b6c35;
+  --ops-status-inactive: var(--mat-sys-on-surface-variant);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--mat-sys-label-large);
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.status-draft { color: var(--ops-status-draft); }
+.status-pending, .status-future, .status-suspended { color: var(--ops-status-pending); }
+.status-approved, .status-active { color: var(--ops-status-approved); }
+.status-rejected { color: var(--ops-status-rejected); }
+.status-failed { color: var(--ops-status-failed); }
+.status-completed { color: var(--ops-status-completed); }
+.status-ended { color: var(--ops-status-inactive); }
+
+// Accessible data tables (AGENT.md §45).
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+
+  caption {
+    text-align: left;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
+    padding-bottom: 8px;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  thead th {
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  tbody th {
+    font-weight: 400;
+  }
+
+  tr.off {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page layout utilities shared by feature pages.
+// ---------------------------------------------------------------------------
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  h1 {
+    font: var(--mat-sys-headline-small);
+    margin: 0;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stack > * + * {
+  margin-top: 16px;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.figure {
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-primary);
+  margin: 8px 0 4px;
+}
+
+.error-banner,
+.info-banner {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 0 0 16px;
+}
+
+.error-banner {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.info-banner {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.full {
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 16px;
+}
+
+table.data a {
+  color: var(--mat-sys-primary);
+}
+
+table.data td.num,
+table.data th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.negative {
+  color: var(--mat-sys-error);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+// Card titles use a heading element for document structure but a title-sized font.
+mat-card-title h2 {
+  font: var(--mat-sys-title-medium);
+  margin: 0;
+}
+
+// Visible focus for keyboard users.
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
