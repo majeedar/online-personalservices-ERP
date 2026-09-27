@@ -8,10 +8,11 @@ import { dirname, join, resolve } from 'node:path';
  * dates and amounts are bracketed too. Readable plain text left on a page never went
  * through the dictionary, so a German user would see it in English.
  *
- * - Plain text in elements marked `data-i18n-source="server"` (text the backend
- *   writes: notifications, task titles, report and job descriptions) or
- *   `"master-data"` (names stored in the database: leave types, holidays) is known
- *   and only reported. That report is the to-do list for translating server texts.
+ * - The API answers in the test language too (Accept-Language: qps-ploc), so texts
+ *   the backend writes (notifications, tasks, errors, reports) are checked as well.
+ * - Plain text in elements marked `data-i18n-source="external"` (messages from the
+ *   ERP systems) or `"master-data"` (names stored as entered, e.g. funding sources)
+ *   is known and only reported.
  * - Demo data (names, usernames, IDs, cities) is removed with the patterns in
  *   e2e/i18n-baseline.json.
  * - Any other plain text fails the test: translate it with `tr`, or mark where it
@@ -76,12 +77,18 @@ function plainText(raw: string): string {
     text = text.replace(/⟦[^⟦⟧]*⟧/g, ' ');
   }
   text = text.replace(/[⟦⟧]/g, ' ').replace(/\s+/g, ' ').trim();
-  for (const p of dataPatterns) text = text.replace(p, ' ');
-  return text
-    .replace(/\d+/g, '#')
-    .replace(/\s+/g, ' ')
-    .replace(/^[\s·,:;–→()#.%/+-]+|[\s·,:;–→(#.%/+-]+$/gu, '')
-    .trim();
+  const tidy = (s: string) =>
+    s
+      .replace(/\d+/g, '#')
+      .replace(/\s+/g, ' ')
+      .replace(/^[\s·,:;–→()#.%/+-]+|[\s·,:;–→(#.%/+-]+$/gu, '')
+      .trim();
+  // Twice: whole-text patterns (e.g. a unit code) match once the rest ("ADM – Finance") is gone.
+  for (let pass = 0; pass < 2; pass++) {
+    for (const p of dataPatterns) text = text.replace(p, ' ');
+    text = tidy(text);
+  }
+  return text;
 }
 
 /** Visible text nodes and user-facing attributes of the page, with their marked source. */
@@ -224,8 +231,8 @@ test.afterAll(async ({}, testInfo: TestInfo) => {
   });
   const bySource = (s: string) => sourced.filter((l) => l.source === s).length;
   console.log(
-    `i18n sweep: ${untranslated.length} untranslated; known English from the server: ${bySource('server')}, ` +
-      `from master data: ${bySource('master-data')}`,
+    `i18n sweep: ${untranslated.length} untranslated; known: ${bySource('external')} from external systems, ` +
+      `${bySource('master-data')} from master data`,
   );
   for (const l of untranslated)
     console.log(`  untranslated on ${l.page}: ${JSON.stringify(l.text)}`);

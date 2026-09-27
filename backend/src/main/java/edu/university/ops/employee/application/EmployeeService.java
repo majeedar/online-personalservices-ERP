@@ -65,6 +65,15 @@ public class EmployeeService implements EmployeeDirectory, UserAccountLookup, Pe
 
     // ------------------------------------------------------------ API use cases
 
+    /** Saves the interface and e-mail language of the logged-in employee. */
+    @Transactional
+    public void choosePreferredLanguage(OpsPrincipal principal, String language) {
+        if (!"en".equals(language) && !"de".equals(language)) {
+            throw new BusinessException(ErrorCode.VALIDATION_FAILED, "Choose English or German.");
+        }
+        currentEmployee(principal).choosePreferredLanguage(language);
+    }
+
     public Employee currentEmployee(OpsPrincipal principal) {
         return employees.findById(principal.employeeId())
                 .orElseThrow(() -> BusinessException.notFound(ErrorCode.EMPLOYEE_NOT_FOUND, "Employee"));
@@ -126,7 +135,8 @@ public class EmployeeService implements EmployeeDirectory, UserAccountLookup, Pe
     @Override
     public Optional<Person> findPerson(UUID employeeId) {
         return employees.findById(employeeId)
-                .map(e -> new Person(e.getId(), e.displayName(), e.getEmail(), e.isActive()));
+                .map(e -> new Person(e.getId(), e.displayName(), e.getEmail(), e.isActive(),
+                        e.getPreferredLanguage()));
     }
 
     @Override

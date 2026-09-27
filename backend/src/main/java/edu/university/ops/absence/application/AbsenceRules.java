@@ -1,5 +1,6 @@
 package edu.university.ops.absence.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.domain.AbsenceDayCalculator;
 import edu.university.ops.absence.domain.AbsenceDayCalculator.CalculatedDay;
 import edu.university.ops.absence.domain.AbsenceDayCalculator.DayPlan;
@@ -46,7 +47,12 @@ public class AbsenceRules {
         this.entitlements = entitlements;
     }
 
-    public record Issue(ErrorCode code, String message) {
+    /** A rule violation; the message is shown in the user's language (ADR-020). */
+    public record Issue(ErrorCode code, Text message) {
+        Issue(ErrorCode code, String message) {
+            this(code, Text.of(message));
+        }
+
         BusinessException toException() {
             return new BusinessException(code, message);
         }
@@ -108,12 +114,13 @@ public class AbsenceRules {
                         entitlements.findByEmployeeIdAndYearAndLeaveTypeId(employeeId, year, type.getId());
                 if (ent.isEmpty()) {
                     issues.add(new Issue(ErrorCode.NO_LEAVE_ENTITLEMENT,
-                            "There is no " + type.getName().toLowerCase() + " entitlement for " + year + "."));
+                            Text.of("There is no {type} entitlement for {year}.", "type",
+                                    Text.of(type.getName().toLowerCase()), "year", year)));
                 } else if (!ent.get().covers(needed)) {
                     issues.add(new Issue(ErrorCode.INSUFFICIENT_LEAVE_BALANCE,
-                            "Insufficient leave balance for " + year + ": " + needed.stripTrailingZeros().toPlainString()
-                                    + " day(s) requested, " + ent.get().remainingDays().stripTrailingZeros()
-                                    .toPlainString() + " remaining."));
+                            Text.of("Insufficient leave balance for {year}: {requested} day(s) requested, {remaining} "
+                                    + "remaining.", "year", year, "requested", needed.stripTrailingZeros(),
+                                    "remaining", ent.get().remainingDays().stripTrailingZeros())));
                 }
             });
         }

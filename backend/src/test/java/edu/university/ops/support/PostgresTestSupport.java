@@ -47,6 +47,10 @@ public abstract class PostgresTestSupport {
     }
 
     private static boolean dockerAvailable() {
+        // -Dops.test.embedded-postgres=true: skip Docker, e.g. when the local daemon is unreliable.
+        if (Boolean.getBoolean("ops.test.embedded-postgres")) {
+            return false;
+        }
         try {
             return DockerClientFactory.instance().isDockerAvailable();
         } catch (Throwable t) {

@@ -13,7 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,6 +42,16 @@ class MeController {
         var employee = employeeService.currentEmployee(principal);
         var unit = organisations.findUnit(employee.getOrganisationUnitId()).orElse(null);
         return MeResponse.of(employee, unit, principal.roles());
+    }
+
+    record LanguageBody(String language) {
+    }
+
+    @PutMapping("/language")
+    @Operation(summary = "Save the interface and e-mail language (en, de)")
+    ResponseEntity<Void> language(@RequestBody LanguageBody body) {
+        employeeService.choosePreferredLanguage(CurrentUser.require(), body.language());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/employments")

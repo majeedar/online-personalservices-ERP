@@ -3,6 +3,7 @@ package edu.university.ops.shared.notification;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
 import java.time.Clock;
+import edu.university.ops.shared.i18n.Text;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -34,8 +35,9 @@ public class NotificationService {
         this.clock = clock;
     }
 
+    /** Subject and message are rendered in the reader's language when shown or mailed (ADR-020). */
     public UUID notify(UUID recipientId, NotificationType type, String businessObjectType, UUID businessObjectId,
-                       String subject, String message) {
+                       Text subject, Text message) {
         Notification n = notifications.save(new Notification(recipientId, type, businessObjectType, businessObjectId,
                 subject, message, Instant.now(clock)));
         events.publishEvent(new NotificationCreated(n.getId()));

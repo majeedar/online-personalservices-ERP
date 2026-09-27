@@ -35,7 +35,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
         <mat-card appearance="outlined">
           <mat-card-header>
             <mat-icon mat-card-avatar aria-hidden="true">beach_access</mat-icon>
-            <mat-card-title><span data-i18n-source="master-data">{{ b.leaveTypeName }}</span> {{ b.year }}</mat-card-title>
+            <mat-card-title>{{ b.leaveTypeName }} {{ b.year }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <p class="figure">{{ formatDays(b.remainingDays) }}</p>
@@ -70,7 +70,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
               <tbody>
                 @for (r of requests(); track r.id) {
                   <tr>
-                    <td><a [routerLink]="['/absence', r.id]" data-i18n-source="master-data">{{ r.leaveType.name }}</a></td>
+                    <td><a [routerLink]="['/absence', r.id]">{{ r.leaveType.name }}</a></td>
                     <td>{{ r.startDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}</td>
                     <td>{{ r.endDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}</td>
                     <td class="num">{{ r.workingDays }}</td>

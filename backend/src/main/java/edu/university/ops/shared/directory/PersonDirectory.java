@@ -22,6 +22,7 @@ public interface PersonDirectory {
     /** Active employees currently holding the role, e.g. to alert ERP admins. */
     List<UUID> activeEmployeesWithRole(Role role);
 
-    record Person(UUID id, String displayName, String email, boolean active) {
+    /** @param language preferred language ("en" / "de"), null if not chosen */
+    record Person(UUID id, String displayName, String email, boolean active, String language) {
     }
 }

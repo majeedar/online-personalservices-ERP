@@ -5,6 +5,7 @@ import edu.university.ops.shared.configuration.OpsProperties;
 import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.security.OpsPrincipal;
 import edu.university.ops.shared.security.Role;
 import edu.university.ops.shared.workflow.WorkflowEnums.Decision;
@@ -324,7 +325,7 @@ public class WorkflowService {
         createTask(instance, step, step.getTaskTitle(), step.getTaskDescription(), definitionCode, now);
     }
 
-    private void createTask(WorkflowInstance instance, WorkflowStep step, String title, String description,
+    private void createTask(WorkflowInstance instance, WorkflowStep step, Text title, Text description,
                             String definitionCode, Instant now) {
         LocalDate due = LocalDate.now(clock).plusDays(properties.workflow().taskDueDays());
         UserTask task = tasks.save(new UserTask(step, title, description, due, now));
@@ -346,7 +347,7 @@ public class WorkflowService {
             throw new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND, "The recipient is not an active employee.");
         }
         step.reassign(forwardTo);
-        createTask(instance, step, previous.getTitle(), previous.getDescription(), definitionCode, now);
+        createTask(instance, step, previous.titleText(), previous.descriptionText(), definitionCode, now);
     }
 
     private void finish(WorkflowInstance instance, InstanceStatus outcome, String definitionCode, OpsPrincipal actor,
@@ -375,12 +376,15 @@ public class WorkflowService {
             UserTask t = v.task();
             WorkflowStep s = t.getStep();
             WorkflowInstance i = s.getInstance();
-            result.add(new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getDueDate(), t.getStatus(),
+            Text description = t.descriptionText();
+            // Rendered in the language of the current request (ADR-020).
+            result.add(new TaskView(t.getId(), t.titleText().render(), description == null ? null
+                    : description.render(), t.getDueDate(), t.getStatus(),
                     t.getCreatedAt(), definitionCode(i), i.getBusinessObjectType(), i.getBusinessObjectId(),
                     s.getStepType(), s.getApprovalType(), s.getAssignedEmployeeId(),
                     names.get(s.getAssignedEmployeeId()), s.getAssignedRole(), i.getRequesterId(),
                     names.get(i.getRequesterId()),
-                    v.access() == Access.DELEGATED ? s.getAssignedEmployeeId() : null));
+                    v.access() == Access.DELEGATED ? s.getAssignedEmployeeId() : null, t.titleText()));
         }
         return result;
     }

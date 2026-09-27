@@ -1,5 +1,6 @@
 package edu.university.ops.shared.workflow;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.security.Role;
 import java.util.UUID;
 
@@ -9,10 +10,10 @@ import java.util.UUID;
  * executes. At least one of {@code assignedEmployeeId} / {@code assignedRole} is set.
  *
  * @param stepType    e.g. SUPERVISOR_APPROVAL, FINANCIAL_APPROVAL
- * @param taskTitle   inbox title, e.g. "Approve annual leave – Erika Mustermann"
+ * @param taskTitle   inbox title, e.g. "Approve {type} – {name}"; rendered in the reader's language
  */
 public record StepSpec(String stepType, ApprovalType approvalType, UUID assignedEmployeeId, Role assignedRole,
-                       String taskTitle, String taskDescription) {
+                       Text taskTitle, Text taskDescription) {
 
     public StepSpec {
         if (assignedEmployeeId == null && assignedRole == null) {
@@ -20,12 +21,12 @@ public record StepSpec(String stepType, ApprovalType approvalType, UUID assigned
         }
     }
 
-    public static StepSpec toPerson(String stepType, ApprovalType type, UUID employeeId, String title,
-                                    String description) {
+    public static StepSpec toPerson(String stepType, ApprovalType type, UUID employeeId, Text title,
+                                    Text description) {
         return new StepSpec(stepType, type, employeeId, null, title, description);
     }
 
-    public static StepSpec toRole(String stepType, ApprovalType type, Role role, String title, String description) {
+    public static StepSpec toRole(String stepType, ApprovalType type, Role role, Text title, Text description) {
         return new StepSpec(stepType, type, null, role, title, description);
     }
 }

@@ -1,5 +1,6 @@
 package edu.university.ops.shared.integration;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
@@ -65,7 +66,7 @@ public class IntegrationMonitor {
 
     /** Alerts ERP admins in-app and by mail (AGENT.md §26 "Alert ERP_ADMIN"). */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void alertAdmins(String subject, String message, String businessObjectType, UUID businessObjectId) {
+    public void alertAdmins(Text subject, Text message, String businessObjectType, UUID businessObjectId) {
         persons.activeEmployeesWithRole(Role.ERP_ADMIN).forEach(admin -> notifications.notify(admin,
                 NotificationType.INTEGRATION_FAILURE, businessObjectType, businessObjectId, subject, message));
     }

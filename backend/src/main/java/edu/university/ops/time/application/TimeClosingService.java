@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.employee.EmployeeDirectory;
 import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.exception.BusinessException;
@@ -66,7 +67,8 @@ public class TimeClosingService {
             closing = closings.saveAndFlush(new TimeMonthClosing(month, closedBy, employeeCount, days,
                     Instant.now(clock)));
         } catch (DataIntegrityViolationException e) {
-            throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED, month + " has just been closed by someone else.");
+            throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED,
+                    Text.of("{month} has just been closed by someone else.", "month", month.toString()));
         }
         audit.record("TIME_MONTH_CLOSED", "TimeMonthClosing", closing.getId(), null,
                 Map.of("month", month.toString(), "employees", employeeCount, "days", days));
@@ -78,7 +80,8 @@ public class TimeClosingService {
             throw new BusinessException(ErrorCode.VALIDATION_FAILED, "Please give a reason for reopening the month.");
         }
         TimeMonthClosing closing = closings.findByYearMonthAndStatus(month.toString(), TimeMonthClosing.Status.CLOSED)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE, month + " is not closed."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
+                        Text.of("{month} is not closed.", "month", month.toString())));
         closing.reopen(reopenedBy, reason.strip(), Instant.now(clock));
         closings.saveAndFlush(closing);
         employees.activeEmployees().forEach(e -> accounts.reopenMonth(e.id(), month));
@@ -96,11 +99,11 @@ public class TimeClosingService {
             YearMonth m = current.minusMonths(i);
             Optional<TimeMonthClosing> closing = closings.findByYearMonthAndStatus(m.toString(),
                     TimeMonthClosing.Status.CLOSED);
-            Optional<String> blocked = blockedReason(m);
+            Optional<Text> blocked = blockedReason(m);
             result.add(new MonthStatus(m, closing.isPresent(), closing.map(TimeMonthClosing::getClosedAt).orElse(null),
                     closing.map(TimeMonthClosing::getClosedBy).orElse(null),
                     closing.map(TimeMonthClosing::getEmployees).orElse(0), pending(m), blocked.isEmpty(),
-                    closing.isPresent() ? null : blocked.orElse(null)));
+                    closing.isPresent() ? null : blocked.map(Text::render).orElse(null)));
         }
         return result;
     }
@@ -110,16 +113,17 @@ public class TimeClosingService {
     }
 
     /** Why the month cannot be closed now, if it cannot. */
-    private Optional<String> blockedReason(YearMonth month) {
+    private Optional<Text> blockedReason(YearMonth month) {
         if (isClosed(month)) {
-            return Optional.of(month + " is already closed.");
+            return Optional.of(Text.of("{month} is already closed.", "month", month.toString()));
         }
         if (!month.isBefore(YearMonth.now(clock))) {
-            return Optional.of("Only past months can be closed.");
+            return Optional.of(Text.of("Only past months can be closed."));
         }
         long pending = pending(month);
         if (pending > 0) {
-            return Optional.of(pending + " time correction(s) in " + month + " are still waiting for a decision.");
+            return Optional.of(Text.of("{count} time correction(s) in {month} are still waiting for a decision.",
+                    "count", pending, "month", month.toString()));
         }
         return Optional.empty();
     }

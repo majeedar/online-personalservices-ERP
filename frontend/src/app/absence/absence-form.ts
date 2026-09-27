@@ -11,7 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime } from 'rxjs';
 import { Api } from '../core/api/api.service';
-import { describeError, serverMessage } from '../core/api/api-error';
+import { describeError } from '../core/api/api-error';
 import { AbsenceInput, AbsencePreview, DayPart, LeaveType, PersonRef } from '../core/api/models';
 import { formatDays, formatMinutes, halfDaySuffix, humanize, isoDate, parseIsoDate } from '../core/format';
 import { EmployeePicker } from '../shared/employee-picker';
@@ -62,9 +62,9 @@ import { I18N_PIPES } from '../core/i18n/pipes';
           <form [formGroup]="form" (ngSubmit)="save(true)" novalidate>
             <mat-form-field appearance="outline" class="full">
               <mat-label>{{ 'Leave type' | tr }}</mat-label>
-              <mat-select formControlName="leaveTypeId" required data-i18n-source="master-data">
+              <mat-select formControlName="leaveTypeId" required>
                 @for (t of leaveTypes(); track t.id) {
-                  <mat-option [value]="t.id" data-i18n-source="master-data">{{ t.name }}</mat-option>
+                  <mat-option [value]="t.id">{{ t.name }}</mat-option>
                 }
               </mat-select>
               @if (selectedType(); as t) {
@@ -157,7 +157,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
               }
             </dl>
             @for (issue of p.issues; track issue.code) {
-              <p class="error-banner" role="status"><mat-icon aria-hidden="true">warning</mat-icon> {{ serverMessage(issue.code, issue.message) }}</p>
+              <p class="error-banner" role="status"><mat-icon aria-hidden="true">warning</mat-icon> {{ issue.message }}</p>
             }
             <table class="data">
               <caption>{{ 'Days in the period' | tr }}</caption>
@@ -212,7 +212,6 @@ export class AbsenceForm implements OnInit {
   protected readonly formatMinutes = formatMinutes;
   protected readonly humanize = humanize;
   protected readonly halfDaySuffix = halfDaySuffix;
-  protected readonly serverMessage = serverMessage;
 
   protected readonly form = inject(FormBuilder).group({
     leaveTypeId: ['', Validators.required],

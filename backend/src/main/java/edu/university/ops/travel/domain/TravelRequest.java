@@ -1,5 +1,6 @@
 package edu.university.ops.travel.domain;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
 import jakarta.persistence.CascadeType;
@@ -199,7 +200,7 @@ public class TravelRequest {
         require(TravelStatus.COMPLETED, "Expenses can be entered after the trip is marked completed.");
         if (!expense.getCurrency().equals(currency)) {
             throw new BusinessException(ErrorCode.VALIDATION_FAILED,
-                    "Expenses must be in the trip currency (" + currency + ").");
+                    Text.of("Expenses must be in the trip currency ({currency}).", "currency", currency));
         }
         expenses.add(expense);
         this.updatedAt = now;
@@ -237,7 +238,8 @@ public class TravelRequest {
     private void transition(TravelStatus target, Instant now) {
         if (!status.canTransitionTo(target)) {
             throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
-                    "A trip in status " + status + " cannot become " + target + ".");
+                    Text.of("A trip in status {status} cannot become {target}.", "status", Text.of(status.name()),
+                            "target", Text.of(target.name())));
         }
         this.status = target;
         this.updatedAt = now;

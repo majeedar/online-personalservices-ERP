@@ -71,7 +71,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
                   <td class="num">{{ d.breakMinutes ? formatMinutes(d.breakMinutes) : '—' }}</td>
                   <td>
                     @if (d.holidayName) {
-                      <span data-i18n-source="master-data">{{ d.holidayName }}</span>
+                      {{ d.holidayName }}
                     } @else if (d.absenceType) {
                       {{ humanize(d.absenceType) }}
                     }

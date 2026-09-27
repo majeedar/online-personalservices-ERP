@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,11 +18,18 @@ public final class ApiClient {
     private final MockMvc mvc;
     private final ObjectMapper json;
     private final MockHttpSession session;
+    private final String acceptLanguage;
 
-    private ApiClient(MockMvc mvc, ObjectMapper json, MockHttpSession session) {
+    private ApiClient(MockMvc mvc, ObjectMapper json, MockHttpSession session, String acceptLanguage) {
         this.mvc = mvc;
         this.json = json;
         this.session = session;
+        this.acceptLanguage = acceptLanguage;
+    }
+
+    /** The same session, sending Accept-Language like the SPA does (e.g. "de", "qps-ploc"). */
+    public ApiClient withLanguage(String language) {
+        return new ApiClient(mvc, json, session, language);
     }
 
     public static ApiClient login(MockMvc mvc, ObjectMapper json, String username) throws Exception {
@@ -31,7 +39,7 @@ public final class ApiClient {
         if (r.getResponse().getStatus() != 200) {
             throw new IllegalStateException("Login failed for " + username);
         }
-        return new ApiClient(mvc, json, (MockHttpSession) r.getRequest().getSession());
+        return new ApiClient(mvc, json, (MockHttpSession) r.getRequest().getSession(), null);
     }
 
     public Response get(String url) throws Exception {
@@ -47,6 +55,9 @@ public final class ApiClient {
     }
 
     public Response perform(MockHttpServletRequestBuilder request) throws Exception {
+        if (acceptLanguage != null) {
+            request.header("Accept-Language", acceptLanguage);
+        }
         return new Response(mvc.perform(request.session(session)).andReturn(), json);
     }
 
@@ -66,7 +77,7 @@ public final class ApiClient {
 
         public JsonNode body() {
             try {
-                String content = result.getResponse().getContentAsString();
+                String content = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
                 return content.isEmpty() ? mapper.nullNode() : mapper.readTree(content);
             } catch (Exception e) {
                 throw new IllegalStateException(e);

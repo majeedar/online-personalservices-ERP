@@ -1,5 +1,6 @@
 package edu.university.ops.shared.workflow;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
 import edu.university.ops.shared.workflow.WorkflowEnums.InstanceStatus;
@@ -98,7 +99,7 @@ public class WorkflowInstance {
     void requireRunning() {
         if (status != InstanceStatus.RUNNING) {
             throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
-                    "This workflow is already " + status.name().toLowerCase() + ".");
+                    Text.of("This workflow is already {status}.", "status", Text.of(status.name().toLowerCase())));
         }
     }
 

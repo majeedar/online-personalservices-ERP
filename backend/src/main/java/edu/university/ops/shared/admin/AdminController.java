@@ -1,5 +1,6 @@
 package edu.university.ops.shared.admin;
 
+import edu.university.ops.shared.i18n.Text;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.university.ops.shared.audit.AuditLogEntry;
 import edu.university.ops.shared.audit.AuditLogRepository;
@@ -126,7 +127,7 @@ class AdminController {
     @GetMapping("/batch-jobs")
     @Operation(summary = "Registered batch jobs with their last run")
     List<BatchJobResponse> jobs() {
-        return batch.jobs().stream().map(j -> new BatchJobResponse(j.name(), j.description(), j.defaultCron(),
+        return batch.jobs().stream().map(j -> new BatchJobResponse(j.name(), j.description().render(), j.defaultCron(),
                 batch.lastRun(j.name()).map(BatchRunResponse::of).orElse(null))).toList();
     }
 

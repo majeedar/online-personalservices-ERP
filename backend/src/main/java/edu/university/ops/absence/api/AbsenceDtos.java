@@ -1,5 +1,6 @@
 package edu.university.ops.absence.api;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.application.AbsenceRules;
 import edu.university.ops.absence.application.AbsenceService;
 import edu.university.ops.absence.domain.AbsenceDay;
@@ -41,8 +42,10 @@ final class AbsenceDtos {
     record LeaveTypeResponse(UUID id, String code, String name, boolean deductsEntitlement, boolean requiresApproval,
                              boolean creditsWorkingTime, boolean attachmentRequired) {
         static LeaveTypeResponse of(LeaveType t) {
-            return new LeaveTypeResponse(t.getId(), t.getCode(), t.getName(), t.isDeductsEntitlement(),
-                    t.isRequiresApproval(), t.isCreditsWorkingTime(), t.isAttachmentRequired());
+            // Seeded names are translated; names without a translation are shown as stored (ADR-020).
+            return new LeaveTypeResponse(t.getId(), t.getCode(), Text.of(t.getName()).render(),
+                    t.isDeductsEntitlement(), t.isRequiresApproval(), t.isCreditsWorkingTime(),
+                    t.isAttachmentRequired());
         }
     }
 
@@ -61,12 +64,12 @@ final class AbsenceDtos {
 
     record IssueResponse(String code, String message) {
         static IssueResponse of(AbsenceRules.Issue i) {
-            return new IssueResponse(i.code().name(), i.message());
+            return new IssueResponse(i.code().name(), i.message().render());
         }
     }
 
-    record PreviewResponse(List<DayResponse> days, BigDecimal workingDays, BigDecimal deduction, BigDecimal currentBalance,
-                           BigDecimal projectedBalance, List<IssueResponse> issues) {
+    record PreviewResponse(List<DayResponse> days, BigDecimal workingDays, BigDecimal deduction,
+                           BigDecimal currentBalance, BigDecimal projectedBalance, List<IssueResponse> issues) {
         static PreviewResponse of(AbsenceService.Preview p) {
             return new PreviewResponse(p.days().stream().map(DayResponse::of).toList(), p.workingDays(),
                     p.deduction(), p.currentBalance(), p.projectedBalance(),
@@ -82,7 +85,8 @@ final class AbsenceDtos {
                                   BigDecimal workingDays, BigDecimal deduction, Instant submittedAt) {
         static AbsenceSummaryResponse of(AbsenceRequest r, LeaveType t) {
             return new AbsenceSummaryResponse(r.getId(), LeaveTypeResponse.of(t), r.getStartDate(), r.getEndDate(),
-                    r.getDayParts().start(), r.getDayParts().end(), r.getStatus(), r.workingDays(), r.totalDeduction(), r.getSubmittedAt());
+                    r.getDayParts().start(), r.getDayParts().end(), r.getStatus(), r.workingDays(),
+                    r.totalDeduction(), r.getSubmittedAt());
         }
     }
 
@@ -101,7 +105,8 @@ final class AbsenceDtos {
 
     record AbsenceResponse(UUID id, PersonRef employee, LeaveTypeResponse leaveType, LocalDate startDate,
                            LocalDate endDate, DayPart startDayPart, DayPart endDayPart, PersonRef representative,
-                           String comment, AbsenceStatus status, BigDecimal workingDays, BigDecimal deduction, Instant createdAt, Instant submittedAt,
+                           String comment, AbsenceStatus status, BigDecimal workingDays, BigDecimal deduction,
+                           Instant createdAt, Instant submittedAt,
                            List<DayResponse> days, List<InstanceHistory> history, List<DocumentResponse> documents,
                            AllowedActions actions, Instant anonymisedAt) {
     }
@@ -110,7 +115,7 @@ final class AbsenceDtos {
                                 BigDecimal carryOverDays, BigDecimal additionalDays, BigDecimal usedDays,
                                 BigDecimal reservedDays, BigDecimal remainingDays, LocalDate carryOverExpiry) {
         static LeaveBalanceResponse of(LeaveEntitlement e, LeaveType t) {
-            return new LeaveBalanceResponse(t.getCode(), t.getName(), e.getYear(), e.getBaseDays(),
+            return new LeaveBalanceResponse(t.getCode(), Text.of(t.getName()).render(), e.getYear(), e.getBaseDays(),
                     e.getCarryOverDays(), e.getAdditionalDays(), e.getUsedDays(), e.getReservedDays(),
                     e.remainingDays(), e.getExpiryDate());
         }

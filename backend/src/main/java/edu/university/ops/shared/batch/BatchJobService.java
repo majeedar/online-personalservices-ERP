@@ -1,5 +1,6 @@
 package edu.university.ops.shared.batch;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.exception.BusinessException;
@@ -79,7 +80,8 @@ public class BatchJobService {
      */
     public BatchJobRun run(String jobName, BatchJobRun.Trigger trigger, String startedBy) {
         BatchJob job = Optional.ofNullable(jobs.get(jobName))
-                .orElseThrow(() -> BusinessException.notFound(ErrorCode.RESOURCE_NOT_FOUND, "Batch job " + jobName));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        Text.of("Batch job {job} was not found.", "job", jobName)));
         boolean ownCorrelation = CorrelationId.current() == null;
         if (ownCorrelation) {
             CorrelationId.startNew();
@@ -92,7 +94,8 @@ public class BatchJobService {
                 run = tx.execute(s -> runs.saveAndFlush(new BatchJobRun(jobName, trigger, startedBy,
                         Instant.now(clock), CorrelationId.current())));
             } catch (DataIntegrityViolationException e) {
-                throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE, "Job " + jobName + " is already running.");
+                throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
+                        Text.of("Job {job} is already running.", "job", jobName));
             }
             UUID runId = run.getId();
             AtomicInteger ok = new AtomicInteger();
@@ -129,8 +132,10 @@ public class BatchJobService {
                 if (r.getStatus() != BatchJobRun.Status.SUCCESS) {
                     persons.activeEmployeesWithRole(Role.ERP_ADMIN).forEach(admin -> notifications.notify(admin,
                             NotificationType.BATCH_FAILURE, "BatchJobRun", runId,
-                            "Batch job " + jobName + ": " + r.getStatus(),
-                            failed.get() + " record(s) failed. See Administration › Batch Jobs."));
+                            Text.of("Batch job {job}: {status}", "job", jobName, "status",
+                                    Text.of(r.getStatus().name())),
+                            Text.of("{count} record(s) failed. See Administration › Batch Jobs.", "count",
+                                    failed.get())));
                 }
                 return r;
             });

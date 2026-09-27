@@ -1,5 +1,6 @@
 package edu.university.ops.shared.workflow;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.workflow.WorkflowEnums.InstanceStatus;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public final class WorkflowEvents {
     /** A new task became open, e.g. to notify the assignee and active delegates. */
     public record TaskCreated(UUID taskId, UUID instanceId, String definitionCode, String businessObjectType,
                               UUID businessObjectId, UUID assignedEmployeeId, String assignedRole,
-                              ApprovalType approvalType, String title) {
+                              ApprovalType approvalType, Text title) {
     }
 
     /** The workflow reached a final outcome: APPROVED, REJECTED or RETURNED. */

@@ -1,5 +1,6 @@
 package edu.university.ops.organisation.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.organisation.domain.OrganisationGateway;
 import edu.university.ops.organisation.domain.OrganisationGateway.ExternalOrganisationUnit;
 import edu.university.ops.organisation.domain.OrganisationUnit;
@@ -56,8 +57,8 @@ class OrganisationSyncJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Synchronise faculties, institutes, departments and cost centres from the personnel ERP";
+    public Text description() {
+        return Text.of("Synchronise faculties, institutes, departments and cost centres from the personnel ERP");
     }
 
     @Override

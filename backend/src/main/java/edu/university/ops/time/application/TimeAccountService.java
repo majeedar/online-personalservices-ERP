@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.AbsenceEvents;
 import edu.university.ops.absence.AbsenceLookup;
 import edu.university.ops.absence.AbsenceLookup.AbsenceMinutes;
@@ -119,7 +120,8 @@ public class TimeAccountService implements TimeAccounts {
         List<DayView> result = new ArrayList<>();
         for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
             LocalDate d = date;
-            String holiday = holidayNames.get(d);
+            // Holiday names are translated when shown (ADR-020).
+            String holiday = holidayNames.containsKey(d) ? Text.of(holidayNames.get(d)).render() : null;
             AbsenceMinutes absence = absenceDays.get(d);
             boolean future = d.isAfter(today);
             boolean accounted = !future && accountingStart != null && !d.isBefore(accountingStart);
@@ -278,9 +280,9 @@ public class TimeAccountService implements TimeAccounts {
                     .orElse("An employee");
             persons.activeEmployeesWithRole(Role.TIME_ADMIN).forEach(admin -> notifications.notify(admin,
                     NotificationType.TIME_MONTH_CLOSED_CHANGED, "TimeMonthClosing", null,
-                    "Absence change in a closed month",
-                    name + "'s absence changed in closed month(s) " + affected
-                            + ". Reopen the month to apply it to the time account."));
+                    Text.of("Absence change in a closed month"),
+                    Text.of("The absence of {name} changed in closed month(s) {months}. Reopen the month to apply it "
+                            + "to the time account.", "name", name, "months", affected.toString())));
         }
     }
 }

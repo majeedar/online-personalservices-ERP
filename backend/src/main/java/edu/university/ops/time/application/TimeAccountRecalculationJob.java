@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.employee.EmployeeDirectory;
 import edu.university.ops.shared.batch.BatchJob;
 import java.time.Clock;
@@ -32,8 +33,8 @@ class TimeAccountRecalculationJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Recalculate the daily time accounts of the last " + DAYS_BACK + " days";
+    public Text description() {
+        return Text.of("Recalculate the daily time accounts of the last {days} days", "days", DAYS_BACK);
     }
 
     @Override

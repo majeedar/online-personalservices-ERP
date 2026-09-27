@@ -1,5 +1,6 @@
 package edu.university.ops.shared.batch;
 
+import edu.university.ops.shared.i18n.Text;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -13,7 +14,8 @@ public interface BatchJob {
     /** Stable name, used in URLs and configuration, e.g. "employee-sync". */
     String name();
 
-    String description();
+    /** Shown in the batch overview, in the reader's language (ADR-020). */
+    Text description();
 
     /** Default cron expression; overridable via {@code ops.batch.schedules.<name>}. Empty = manual only. */
     default String defaultCron() {

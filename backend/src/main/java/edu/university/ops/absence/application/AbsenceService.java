@@ -17,6 +17,7 @@ import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.documents.DocumentService;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.notification.NotificationService;
 import edu.university.ops.shared.notification.NotificationType;
 import edu.university.ops.shared.security.OpsPrincipal;
@@ -186,21 +187,21 @@ public class AbsenceService {
         if (type.isRequiresApproval()) {
             UUID instanceId = workflow.start(APPROVAL_WORKFLOW, BUSINESS_OBJECT_TYPE, request.getId(), employeeId,
                     List.of(approvalStep(request, type, employeeName, "SUPERVISOR_APPROVAL",
-                            "Approve " + type.getName().toLowerCase() + " – " + employeeName)));
+                            Text.of("Approve {type} – {name}", "type", typeName(type), "name", employeeName))));
             request.startApproval(instanceId, now);
             forEachYear(request, (ent, d) -> ent.reserve(d), type);
             notifications.notify(employeeId, NotificationType.ABSENCE_SUBMITTED, BUSINESS_OBJECT_TYPE, request.getId(),
-                    "Absence request submitted",
-                    "Your " + type.getName().toLowerCase() + " request for " + period(request)
-                            + " was submitted for approval.");
+                    Text.of("Absence request submitted"),
+                    Text.of("Your {type} request for {period} was submitted for approval.", "type", typeName(type),
+                            "period", period(request)));
         } else {
             // Types without approval (e.g. sick leave) take effect immediately.
             request.approve(now);
             forEachYear(request, (ent, d) -> ent.use(d), type);
             events.publishEvent(new AbsenceEvents.AbsenceApproved(request.getId(), employeeId, request.dates()));
             notifications.notify(employeeId, NotificationType.ABSENCE_APPROVED, BUSINESS_OBJECT_TYPE, request.getId(),
-                    "Absence recorded", "Your " + type.getName().toLowerCase() + " for " + period(request)
-                            + " has been recorded.");
+                    Text.of("Absence recorded"), Text.of("Your {type} for {period} has been recorded.", "type",
+                            typeName(type), "period", period(request)));
         }
         events.publishEvent(new AbsenceEvents.AbsenceSubmitted(request.getId(), employeeId, request.getStartDate(),
                 request.getEndDate()));
@@ -252,8 +253,8 @@ public class AbsenceService {
                     UUID instanceId = workflow.start(CANCELLATION_WORKFLOW, BUSINESS_OBJECT_TYPE, request.getId(),
                             request.getEmployeeId(), List.of(approvalStep(request, type, employeeName,
                                     "SUPERVISOR_APPROVAL",
-                                    "Approve cancellation of " + type.getName().toLowerCase() + " – "
-                                            + employeeName)));
+                                    Text.of("Approve cancellation of {type} – {name}", "type", typeName(type),
+                                            "name", employeeName))));
                     request.requestCancellation(instanceId, now);
                 } else {
                     // No approval needed (e.g. sick leave), or HR performs an administrative cancellation.
@@ -261,7 +262,7 @@ public class AbsenceService {
                 }
             }
             default -> throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
-                    "A request in status " + before + " cannot be cancelled.");
+                    Text.of("A request in status {status} cannot be cancelled.", "status", Text.of(before.name())));
         }
         audit.record(owner ? "ABSENCE_CANCELLATION" : "ABSENCE_ADMIN_CANCELLATION", BUSINESS_OBJECT_TYPE,
                 request.getId(), Map.of("status", before),
@@ -282,23 +283,24 @@ public class AbsenceService {
                 forEachYear(request, (ent, d) -> ent.consumeReservation(d), type);
                 events.publishEvent(new AbsenceEvents.AbsenceApproved(request.getId(), request.getEmployeeId(),
                         request.dates()));
-                notifyEmployee(request, NotificationType.ABSENCE_APPROVED, "Absence approved",
-                        "Your " + type.getName().toLowerCase() + " for " + period(request) + " has been approved.");
+                notifyEmployee(request, NotificationType.ABSENCE_APPROVED, Text.of("Absence approved"),
+                        Text.of("Your {type} for {period} has been approved.", "type", typeName(type), "period",
+                                period(request)));
             }
             case "REJECTED" -> {
                 request.reject(now);
                 forEachYear(request, (ent, d) -> ent.releaseReservation(d), type);
                 events.publishEvent(new AbsenceEvents.AbsenceRejected(request.getId(), request.getEmployeeId()));
-                notifyEmployee(request, NotificationType.ABSENCE_REJECTED, "Absence rejected",
-                        "Your " + type.getName().toLowerCase() + " for " + period(request) + " was rejected."
-                                + reason(comment));
+                notifyEmployee(request, NotificationType.ABSENCE_REJECTED, Text.of("Absence rejected"),
+                        Text.of("Your {type} for {period} was rejected.{reason}", "type", typeName(type), "period",
+                                period(request), "reason", reason(comment)));
             }
             case "RETURNED" -> {
                 request.returnForCorrection(now);
                 forEachYear(request, (ent, d) -> ent.releaseReservation(d), type);
-                notifyEmployee(request, NotificationType.ABSENCE_RETURNED, "Absence request returned",
-                        "Your " + type.getName().toLowerCase() + " request for " + period(request)
-                                + " was returned for correction." + reason(comment));
+                notifyEmployee(request, NotificationType.ABSENCE_RETURNED, Text.of("Absence request returned"),
+                        Text.of("Your {type} request for {period} was returned for correction.{reason}", "type",
+                                typeName(type), "period", period(request), "reason", reason(comment)));
             }
             default -> {
                 return;
@@ -317,9 +319,9 @@ public class AbsenceService {
                     Map.of("status", AbsenceStatus.CANCEL_REQUESTED), Map.of("status", request.getStatus()));
         } else {
             request.keepAfterRejectedCancellation(now);
-            notifyEmployee(request, NotificationType.ABSENCE_REJECTED, "Cancellation rejected",
-                    "The cancellation of your absence " + period(request) + " was not approved; the absence stands."
-                            + reason(comment));
+            notifyEmployee(request, NotificationType.ABSENCE_REJECTED, Text.of("Cancellation rejected"),
+                    Text.of("The cancellation of your absence {period} was not approved; the absence stands.{reason}",
+                            "period", period(request), "reason", reason(comment)));
             audit.record("ABSENCE_CANCELLATION_REJECTED", BUSINESS_OBJECT_TYPE, request.getId(),
                     Map.of("status", AbsenceStatus.CANCEL_REQUESTED), Map.of("status", request.getStatus()));
         }
@@ -332,14 +334,15 @@ public class AbsenceService {
         forEachYear(request, (ent, d) -> ent.restore(d), type);
         events.publishEvent(new AbsenceEvents.AbsenceCancelled(request.getId(), request.getEmployeeId(),
                 request.dates()));
-        notifyEmployee(request, NotificationType.ABSENCE_CANCELLED, "Absence cancelled",
-                "Your absence " + period(request) + " has been cancelled.");
+        notifyEmployee(request, NotificationType.ABSENCE_CANCELLED, Text.of("Absence cancelled"),
+                Text.of("Your absence {period} has been cancelled.", "period", period(request)));
     }
 
     private StepSpec approvalStep(AbsenceRequest request, LeaveType type, String employeeName, String stepType,
-                                  String title) {
-        String description = employeeName + ": " + type.getName() + ", " + period(request) + " ("
-                + request.workingDays().stripTrailingZeros().toPlainString() + " working day(s))";
+                                  Text title) {
+        Text description = Text.of("{name}: {type}, {period} ({days} working day(s))", "name", employeeName,
+                "type", Text.of(type.getName()), "period", period(request), "days",
+                request.workingDays().stripTrailingZeros());
         List<UUID> approvers = employees.approversOf(request.getEmployeeId(), ApprovalType.ABSENCE,
                 LocalDate.now(clock));
         // No configured approver: HR handles the request instead of it getting stuck.
@@ -376,7 +379,7 @@ public class AbsenceService {
                 .orElseThrow(() -> BusinessException.notFound(ErrorCode.RESOURCE_NOT_FOUND, "Leave type"));
     }
 
-    private void notifyEmployee(AbsenceRequest request, NotificationType type, String subject, String message) {
+    private void notifyEmployee(AbsenceRequest request, NotificationType type, Text subject, Text message) {
         notifications.notify(request.getEmployeeId(), type, BUSINESS_OBJECT_TYPE, request.getId(), subject, message);
     }
 
@@ -385,19 +388,27 @@ public class AbsenceService {
                 .orElse("Unknown");
     }
 
-    static String period(AbsenceRequest r) {
+    /** "01.03.2027 (afternoon) – 03.03.2027 (morning)", translated. */
+    static Text period(AbsenceRequest r) {
         DayParts parts = r.getDayParts();
-        String start = r.getStartDate().format(DATE) + half(parts.start());
+        Text start = day(r.getStartDate(), parts.start());
         return r.getStartDate().equals(r.getEndDate()) ? start
-                : start + " – " + r.getEndDate().format(DATE) + half(parts.end());
+                : Text.of("{from} – {to}", "from", start, "to", day(r.getEndDate(), parts.end()));
     }
 
-    private static String half(DayPart part) {
-        return part.isHalf() ? " (" + part.name().toLowerCase() + ")" : "";
+    private static Text day(LocalDate date, DayPart part) {
+        return part.isHalf()
+                ? Text.of("{date} ({part})", "date", date, "part", Text.of(part.name().toLowerCase()))
+                : Text.of("{date}", "date", date);
     }
 
-    private static String reason(String comment) {
-        return comment == null ? "" : " Reason: " + comment;
+    /** Leave-type name as used inside a sentence ("your annual leave request"). */
+    private static Text typeName(LeaveType type) {
+        return Text.of(type.getName().toLowerCase());
+    }
+
+    private static Text reason(String comment) {
+        return comment == null ? Text.of("") : Text.of(" Reason: {comment}", "comment", comment);
     }
 
     private static Map<String, Object> snapshot(AbsenceRequest r, LeaveType type) {

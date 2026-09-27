@@ -1,5 +1,6 @@
 package edu.university.ops.shared.integration;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.batch.BatchJob;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +26,8 @@ class IntegrationRetryJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Retry pending external exports (travel ERP, finance postings)";
+    public Text description() {
+        return Text.of("Retry pending external exports (travel ERP, finance postings)");
     }
 
     @Override

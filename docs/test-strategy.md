@@ -8,7 +8,8 @@
 | mock-erp | Spring Boot test | idempotent postings, outages, wire format | `cd mock-erp && mvn test` |
 | Frontend unit | Vitest (Angular unit-test builder) | components and services with `HttpTestingController` | `cd frontend && npm test -- --watch=false` |
 | Translations | Node script | every text passed to `tr` has a German entry; no template text or user-facing attribute (`aria-label`, `placeholder`, `title`, …) bypasses `tr`; unused entries are listed | `cd frontend && npm run i18n:check` |
-| Translation sweep | Playwright | every page and main dialog, per role, in the test language `pseudo` (dictionary texts shown as `⟦…⟧`): plain text left on screen fails the test, unless its element is marked `data-i18n-source="server"` / `"master-data"` (reported as the to-do list) or it is demo data matched by `e2e/i18n-baseline.json` | `cd frontend && npx playwright test i18n-sweep` |
+| Translation sweep | Playwright | every page and main dialog, per role, in the test language `pseudo`. The API answers in it too, so dictionary texts from both frontend and backend show as `⟦…⟧`. Plain text left on screen fails the test, unless its element is marked `data-i18n-source="external"` / `"master-data"` (reported) or it is demo data matched by `e2e/i18n-baseline.json` | `cd frontend && npx playwright test i18n-sweep` |
+| Server translations | JUnit | `TranslationCompletenessTest`: every `Text.of`, exception, issue and report text in the sources, and every code shown inside a sentence, has a German entry with the same placeholders | `cd backend && mvn test -Dtest=TranslationCompletenessTest` (`-Di18n.dump` writes the missing texts to `target/i18n-missing.json`) |
 | End-to-end | Playwright (Chromium) | demo scenarios in a real browser against a running stack; fails on console errors; writes the README screenshots | `cd frontend && npx playwright test` |
 
 ## Coverage of AGENT.md §64–67
@@ -29,6 +30,7 @@
 - `TimeScenarioTest`: Scenarios 5 and 6, absence credit;
 - `TimeClosingTest`: monthly closing: guards, frozen days, rejected corrections, reopening, scheduler idempotency, permissions;
 - `DataRetentionTest`: anonymisation after the retention period (comments, representative, attachments, decision comments), recent requests untouched, audit entry, idempotent rerun;
+- `LocalizedTextsTest`: one stored notification read in English, German and the test language; German task titles, leave-type names and errors (also from the security filter chain); saving the language;
 - `TravelScenarioTest`: Scenarios 3, 4 and 7, funding, cost centre, outage and retry, idempotency;
 - `OperationsTest`: organisation, employee, supervisor and schedule sync; entitlement and time jobs; reminders; health; reports.
 

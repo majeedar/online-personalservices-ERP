@@ -1,6 +1,7 @@
 package edu.university.ops.shared.security;
 
 import edu.university.ops.shared.audit.AuditService;
+import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,22 +40,29 @@ class AuthController {
     private final SecurityContextRepository securityContextRepository;
     private final CsrfTokenRepository csrfTokenRepository;
     private final AuditService audit;
+    private final PersonDirectory persons;
 
     AuthController(AuthenticationManager authenticationManager, SecurityContextRepository securityContextRepository,
-                   CsrfTokenRepository csrfTokenRepository, AuditService audit) {
+                   CsrfTokenRepository csrfTokenRepository, AuditService audit,
+                   PersonDirectory persons) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.csrfTokenRepository = csrfTokenRepository;
         this.audit = audit;
+        this.persons = persons;
     }
 
     record LoginRequest(@NotBlank @Size(max = 64) String username, @NotBlank @Size(max = 128) String password) {
     }
 
-    record SessionResponse(UUID employeeId, String username, String displayName, Set<Role> roles) {
-        static SessionResponse of(OpsPrincipal p) {
-            return new SessionResponse(p.employeeId(), p.username(), p.displayName(), p.roles());
-        }
+    /** @param language the employee's saved language, null if not chosen yet (the browser's choice applies) */
+    record SessionResponse(UUID employeeId, String username, String displayName, Set<Role> roles,
+                           String language) {
+    }
+
+    private SessionResponse sessionOf(OpsPrincipal p) {
+        String language = persons.findPerson(p.employeeId()).map(PersonDirectory.Person::language).orElse(null);
+        return new SessionResponse(p.employeeId(), p.username(), p.displayName(), p.roles(), language);
     }
 
     @PostMapping("/login")
@@ -84,13 +92,13 @@ class AuthController {
 
         OpsPrincipal principal = (OpsPrincipal) authentication.getPrincipal();
         audit.record("LOGIN", "Session", principal.employeeId(), null, Map.of("roles", principal.roles()));
-        return SessionResponse.of(principal);
+        return sessionOf(principal);
     }
 
     @GetMapping("/session")
     @Operation(summary = "Current session; 401 if not logged in")
     SessionResponse session() {
-        return SessionResponse.of(CurrentUser.require());
+        return sessionOf(CurrentUser.require());
     }
 
     @PostMapping("/logout")

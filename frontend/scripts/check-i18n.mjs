@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'app');
 const de = JSON.parse(readFileSync(join(root, 'core', 'i18n', 'de.json'), 'utf8'));
-// Keys built at runtime (error codes, enum labels) are not found in the sources.
-const isDynamic = (k) => k.startsWith('error.') || k.startsWith('enum.');
+// Keys built at runtime (enum labels) are not found in the sources.
+const isDynamic = (k) => k.startsWith('enum.');
 
 const files = [];
 (function walk(dir) {

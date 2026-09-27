@@ -33,6 +33,9 @@ public class Employee {
     private UUID primaryEmploymentId;
     private boolean active;
 
+    /** Interface and e-mail language ("en" / "de"); null until the employee chooses (ADR-020). */
+    private String preferredLanguage;
+
     @Version
     private Long version;
 
@@ -123,6 +126,17 @@ public class Employee {
 
     public boolean isActive() {
         return active;
+    }
+
+    public String getPreferredLanguage() {
+        return preferredLanguage;
+    }
+
+    public void choosePreferredLanguage(String language) {
+        if (!"en".equals(language) && !"de".equals(language)) {
+            throw new IllegalArgumentException("Unsupported language: " + language);
+        }
+        this.preferredLanguage = language;
     }
 
     public Instant getSyncedAt() {

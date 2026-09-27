@@ -1,5 +1,6 @@
 package edu.university.ops.shared.retention;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.batch.BatchJob;
 import java.time.Clock;
@@ -37,8 +38,8 @@ class DataRetentionJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Anonymise finished requests and delete old notifications after their retention period";
+    public Text description() {
+        return Text.of("Anonymise finished requests and delete old notifications after their retention period");
     }
 
     @Override

@@ -1,5 +1,6 @@
 package edu.university.ops.travel.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.notification.NotificationService;
 import edu.university.ops.shared.notification.NotificationType;
 import edu.university.ops.shared.workflow.ApprovalType;
@@ -71,6 +72,6 @@ class TravelWorkflowHandler {
         NotificationType type = TravelService.EXPENSE_WORKFLOW.equals(event.definitionCode())
                 ? NotificationType.TRAVEL_EXPENSE_REVIEW_REQUIRED : NotificationType.TRAVEL_APPROVAL_REQUIRED;
         recipients.forEach(r -> notifications.notify(r, type, TravelService.BUSINESS_OBJECT_TYPE,
-                event.businessObjectId(), "Approval required", event.title()));
+                event.businessObjectId(), Text.of("Approval required"), event.title()));
     }
 }

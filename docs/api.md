@@ -26,13 +26,16 @@ Every error has one shape (AGENT.md §33):
 
 ## Endpoints
 
+**Language (ADR-020):** every response text (errors, notifications, tasks, reports, job descriptions, leave-type and holiday names) follows `Accept-Language`: `de` for German, `qps-ploc` for the test language, anything else English. Field messages of `VALIDATION_FAILED` come from Bean Validation in the same language.
+
 ### Authentication and self-service
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/auth/login` | `{username, password}` → session |
-| GET | `/auth/session` | 401 if not logged in (also issues the CSRF cookie) |
+| GET | `/auth/session` | 401 if not logged in (also issues the CSRF cookie); includes the saved `language` (`en`, `de` or null) |
 | POST | `/auth/logout` | |
 | GET | `/me`, `/me/employments`, `/me/work-schedule`, `/me/roles` | |
+| PUT | `/me/language` | `{language: "en" \| "de"}`: interface and e-mail language (204) |
 | GET | `/employees/{id}` | self, HR admin, or an active approver |
 | GET | `/employees/search?q=` | staff directory: name and unit only, max 20 |
 | GET | `/organisation-units`, `/holidays?year=` | |

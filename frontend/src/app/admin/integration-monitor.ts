@@ -72,7 +72,7 @@ const SYSTEMS: Record<string, string> = {
               <tr>
                 <td>{{ e.createdAt | ldate: 'medium' }}</td>
                 <td>{{ e.externalReference ?? '—' }}</td>
-                <td data-i18n-source="server"><strong>{{ e.errorCode }}</strong><div class="muted">{{ e.errorMessage }}</div></td>
+                <td data-i18n-source="external"><strong>{{ e.errorCode }}</strong><div class="muted">{{ e.errorMessage }}</div></td>
                 <td class="num">{{ e.retryCount }}</td>
                 <td class="actions">
                   @if (e.retryable && canRetry()) {

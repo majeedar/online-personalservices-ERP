@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Role, Session } from '../api/models';
+import { hasStoredChoice, setLanguage } from '../i18n/i18n';
 
 /**
  * Holds the server session. Roles shown here only drive navigation; every
@@ -22,6 +23,7 @@ export class AuthService {
     if (!this.loaded) {
       try {
         this.current.set(await firstValueFrom(this.http.get<Session>('/api/v1/auth/session')));
+        this.applySavedLanguage();
       } catch {
         this.current.set(null);
       }
@@ -36,6 +38,7 @@ export class AuthService {
     );
     this.current.set(session);
     this.loaded = true;
+    this.applySavedLanguage();
     return session;
   }
 
@@ -44,6 +47,14 @@ export class AuthService {
       await firstValueFrom(this.http.post<void>('/api/v1/auth/logout', {}));
     } finally {
       this.current.set(null);
+    }
+  }
+
+  /** The profile's language applies where no language was chosen in this browser yet (ADR-020). */
+  private applySavedLanguage(): void {
+    const saved = this.current()?.language;
+    if (saved && !hasStoredChoice()) {
+      setLanguage(saved);
     }
   }
 

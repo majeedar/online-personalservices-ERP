@@ -1,5 +1,6 @@
 package edu.university.ops.absence.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.domain.AbsenceDay;
 import edu.university.ops.absence.domain.AbsenceRepositories.AbsenceRequestRepository;
 import edu.university.ops.absence.domain.AbsenceRepositories.LeaveEntitlementRepository;
@@ -69,8 +70,8 @@ class LeaveEntitlementJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Create yearly leave entitlements and recalculate used/reserved days";
+    public Text description() {
+        return Text.of("Create yearly leave entitlements and recalculate used/reserved days");
     }
 
     @Override

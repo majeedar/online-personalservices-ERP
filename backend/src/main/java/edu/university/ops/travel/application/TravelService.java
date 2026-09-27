@@ -1,5 +1,6 @@
 package edu.university.ops.travel.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.employee.EmployeeDirectory;
 import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.documents.Document;
@@ -134,21 +135,23 @@ public class TravelService {
 
         String name = name(request.getEmployeeId());
         LocalDate today = LocalDate.now(clock);
-        String summary = name + ": " + request.getPurpose() + ", " + request.getDestinationCity() + " ("
-                + period(request) + "), " + request.getEstimatedCost() + " " + request.getCurrency();
+        Text summary = Text.of("{name}: {purpose}, {city} ({period}), {cost} {currency}", "name", name, "purpose",
+                request.getPurpose(), "city", request.getDestinationCity(), "period", period(request), "cost",
+                request.getEstimatedCost(), "currency", request.getCurrency());
         List<StepSpec> steps = new ArrayList<>();
         steps.add(assignedStep(request, ApprovalType.TRAVEL, Role.HR_ADMIN, STEP_SUPERVISOR,
-                "Approve business travel – " + name, summary, today));
+                Text.of("Approve business travel – {name}", "name", name), summary, today));
         if (request.getEstimatedCost().compareTo(properties.financialApprovalThreshold()) > 0) {
             steps.add(assignedStep(request, ApprovalType.FINANCIAL, Role.FINANCIAL_APPROVER, STEP_FINANCIAL,
-                    "Perform financial approval – " + name, summary + ", cost centre " + request.getCostCentre(),
-                    today));
+                    Text.of("Perform financial approval – {name}", "name", name),
+                    Text.of("{summary}, cost centre {costCentre}", "summary", summary, "costCentre",
+                            request.getCostCentre()), today));
         }
         UUID instanceId = workflow.start(APPROVAL_WORKFLOW, BUSINESS_OBJECT_TYPE, id, request.getEmployeeId(), steps);
         request.submit(instanceId, Instant.now(clock));
         notifications.notify(request.getEmployeeId(), NotificationType.TRAVEL_SUBMITTED, BUSINESS_OBJECT_TYPE, id,
-                "Travel request submitted", "Your travel request to " + request.getDestinationCity()
-                        + " was submitted for approval.");
+                Text.of("Travel request submitted"), Text.of("Your travel request to {city} was submitted for "
+                        + "approval.", "city", request.getDestinationCity()));
         events.publishEvent(new TravelEvents.TravelSubmitted(id, request.getEmployeeId()));
         audit.record("TRAVEL_SUBMITTED", BUSINESS_OBJECT_TYPE, id, Map.of("status", TravelStatus.DRAFT),
                 Map.of("status", request.getStatus(), "steps", steps.size()));
@@ -160,11 +163,12 @@ public class TravelService {
         Instant now = Instant.now(clock);
         if (r.getStartDateTime().isBefore(now.minus(Duration.ofDays(properties.maxDaysInPast())))) {
             throw new BusinessException(ErrorCode.INVALID_DATE_RANGE,
-                    "Trips can be requested at most " + properties.maxDaysInPast() + " days after they started.");
+                    Text.of("Trips can be requested at most {days} days after they started.", "days",
+                            properties.maxDaysInPast()));
         }
         if (!properties.currencies().contains(r.getCurrency())) {
             throw new BusinessException(ErrorCode.VALIDATION_FAILED,
-                    "Currency " + r.getCurrency() + " is not supported.");
+                    Text.of("Currency {currency} is not supported.", "currency", r.getCurrency()));
         }
         Map<UUID, FundingSource> sources = fundingSources
                 .findByIdIn(r.getFundings().stream().map(TravelFunding::getFundingSourceId).toList()).stream()
@@ -179,7 +183,8 @@ public class TravelService {
                 () -> finance.validateCostCentre(r.getCostCentre()));
         if (!valid) {
             throw new BusinessException(ErrorCode.COST_CENTRE_INVALID,
-                    "Cost centre " + r.getCostCentre() + " is not valid in the finance system.");
+                    Text.of("Cost centre {costCentre} is not valid in the finance system.", "costCentre",
+                            r.getCostCentre()));
         }
     }
 
@@ -203,7 +208,8 @@ public class TravelService {
                         "This trip is not awaiting a decision."));
         if (expectedStep != null && !expectedStep.equals(task.stepType())) {
             throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
-                    "The trip is at step " + task.stepType() + ", not " + expectedStep + ".");
+                    Text.of("The trip is at step {step}, not {expected}.", "step", Text.of(task.stepType()),
+                            "expected", Text.of(expectedStep)));
         }
         workflow.decide(task.id(), decision, comment, null, principal);
         return request;
@@ -267,20 +273,21 @@ public class TravelService {
 
     public TravelRequest submitExpenses(UUID id, OpsPrincipal principal) {
         TravelRequest request = own(id, principal);
-        List<String> missing = request.getExpenses().stream()
+        List<Text> missing = request.getExpenses().stream()
                 .filter(e -> properties.receiptRequiredTypes().contains(e.getExpenseType().name())
                         && e.getReceiptDocumentId() == null)
-                .map(e -> e.getExpenseType().name()).toList();
+                .map(e -> Text.of(e.getExpenseType().name())).toList();
         if (!missing.isEmpty()) {
             throw new BusinessException(ErrorCode.ATTACHMENT_REQUIRED,
-                    "Receipts are missing for: " + String.join(", ", missing) + ".");
+                    Text.of("Receipts are missing for: {types}.", "types", Text.list(missing)));
         }
         String name = name(request.getEmployeeId());
         UUID instanceId = workflow.start(EXPENSE_WORKFLOW, BUSINESS_OBJECT_TYPE, id, request.getEmployeeId(),
                 List.of(StepSpec.toRole(STEP_TRAVEL_OFFICE, ApprovalType.TRAVEL, Role.TRAVEL_OFFICE,
-                        "Review travel expense claim – " + name, name + ": " + request.getDestinationCity() + " ("
-                                + period(request) + "), claimed " + request.totalExpenses() + " "
-                                + request.getCurrency())));
+                        Text.of("Review travel expense claim – {name}", "name", name),
+                        Text.of("{name}: {city} ({period}), claimed {amount} {currency}", "name", name, "city",
+                                request.getDestinationCity(), "period", period(request), "amount",
+                                request.totalExpenses(), "currency", request.getCurrency()))));
         request.submitExpenses(instanceId, Instant.now(clock));
         audit.record("TRAVEL_EXPENSES_SUBMITTED", BUSINESS_OBJECT_TYPE, id, Map.of("status", TravelStatus.COMPLETED),
                 Map.of("status", request.getStatus(), "total", request.totalExpenses()));
@@ -298,19 +305,21 @@ public class TravelService {
                 outbox.enqueue(ExportTypes.TRAVEL_EXPORT, BUSINESS_OBJECT_TYPE, request.getId(),
                         "travel-export-" + request.getId(), Map.of("travelRequestId", request.getId()));
                 events.publishEvent(new TravelEvents.TravelAuthorized(request.getId(), request.getEmployeeId()));
-                notifyEmployee(request, NotificationType.TRAVEL_AUTHORIZED, "Business travel authorized",
-                        "Your trip to " + request.getDestinationCity() + " (" + period(request) + ") is authorized.");
+                notifyEmployee(request, NotificationType.TRAVEL_AUTHORIZED, Text.of("Business travel authorized"),
+                        Text.of("Your trip to {city} ({period}) is authorized.", "city", request.getDestinationCity(),
+                                "period", period(request)));
             }
             case "REJECTED" -> {
                 request.reject(now);
-                notifyEmployee(request, NotificationType.TRAVEL_REJECTED, "Business travel rejected",
-                        "Your trip to " + request.getDestinationCity() + " was rejected." + reason(comment));
+                notifyEmployee(request, NotificationType.TRAVEL_REJECTED, Text.of("Business travel rejected"),
+                        Text.of("Your trip to {city} was rejected.{reason}", "city", request.getDestinationCity(),
+                                "reason", reason(comment)));
             }
             case "RETURNED" -> {
                 request.returnForCorrection(now);
-                notifyEmployee(request, NotificationType.TRAVEL_RETURNED, "Travel request returned",
-                        "Your trip to " + request.getDestinationCity() + " was returned for correction."
-                                + reason(comment));
+                notifyEmployee(request, NotificationType.TRAVEL_RETURNED, Text.of("Travel request returned"),
+                        Text.of("Your trip to {city} was returned for correction.{reason}", "city",
+                                request.getDestinationCity(), "reason", reason(comment)));
             }
             default -> {
                 return;
@@ -331,16 +340,17 @@ public class TravelService {
                     "finance-posting-" + request.getId(), Map.of("amount", amount));
             events.publishEvent(new TravelEvents.TravelSettlementCreated(request.getId(), request.getEmployeeId(),
                     amount, request.getCurrency()));
-            notifyEmployee(request, NotificationType.TRAVEL_SETTLED, "Travel expenses settled",
-                    "Your expenses for the trip to " + request.getDestinationCity() + " were settled: " + amount + " "
-                            + request.getCurrency() + ".");
+            notifyEmployee(request, NotificationType.TRAVEL_SETTLED, Text.of("Travel expenses settled"),
+                    Text.of("Your expenses for the trip to {city} were settled: {amount} {currency}.", "city",
+                            request.getDestinationCity(), "amount", amount, "currency", request.getCurrency()));
             audit.record("TRAVEL_SETTLED", BUSINESS_OBJECT_TYPE, request.getId(),
                     Map.of("status", TravelStatus.EXPENSES_SUBMITTED),
                     Map.of("status", request.getStatus(), "amount", amount));
         } else {
             request.returnExpenses(now);
-            notifyEmployee(request, NotificationType.TRAVEL_RETURNED, "Expense claim returned",
-                    "Your expense claim for " + request.getDestinationCity() + " needs correction." + reason(comment));
+            notifyEmployee(request, NotificationType.TRAVEL_RETURNED, Text.of("Expense claim returned"),
+                    Text.of("Your expense claim for {city} needs correction.{reason}", "city",
+                            request.getDestinationCity(), "reason", reason(comment)));
             audit.record("TRAVEL_EXPENSES_RETURNED", BUSINESS_OBJECT_TYPE, request.getId(),
                     Map.of("status", TravelStatus.EXPENSES_SUBMITTED), Map.of("status", request.getStatus()));
         }
@@ -349,7 +359,7 @@ public class TravelService {
     // ------------------------------------------------------------------ helpers
 
     private StepSpec assignedStep(TravelRequest r, ApprovalType type, Role fallbackRole, String stepType,
-                                  String title, String description, LocalDate today) {
+                                  Text title, Text description, LocalDate today) {
         List<UUID> approvers = employees.approversOf(r.getEmployeeId(), type, today).stream()
                 .filter(a -> !a.equals(r.getEmployeeId())).toList();
         return approvers.isEmpty() ? StepSpec.toRole(stepType, type, fallbackRole, title, description)
@@ -370,7 +380,7 @@ public class TravelService {
         return request;
     }
 
-    private void notifyEmployee(TravelRequest r, NotificationType type, String subject, String message) {
+    private void notifyEmployee(TravelRequest r, NotificationType type, Text subject, Text message) {
         notifications.notify(r.getEmployeeId(), type, BUSINESS_OBJECT_TYPE, r.getId(), subject, message);
     }
 
@@ -384,8 +394,8 @@ public class TravelService {
                 + DATE.format(r.getEndDateTime().atOffset(ZoneOffset.UTC));
     }
 
-    private static String reason(String comment) {
-        return comment == null ? "" : " Reason: " + comment;
+    private static Text reason(String comment) {
+        return comment == null ? Text.of("") : Text.of(" Reason: {comment}", "comment", comment);
     }
 
     private static Map<String, Object> snapshot(TravelRequest r) {

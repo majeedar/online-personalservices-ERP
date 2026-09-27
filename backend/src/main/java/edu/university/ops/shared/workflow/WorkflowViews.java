@@ -1,5 +1,7 @@
 package edu.university.ops.shared.workflow;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.workflow.WorkflowEnums.Decision;
 import edu.university.ops.shared.workflow.WorkflowEnums.InstanceStatus;
 import edu.university.ops.shared.workflow.WorkflowEnums.StepStatus;
@@ -17,12 +19,13 @@ public final class WorkflowViews {
 
     /**
      * @param viaDelegationFrom set when the viewer sees this task only because of a delegation
+     * @param titleText         the title as a text, for messages in another reader's language
      */
     public record TaskView(UUID id, String title, String description, LocalDate dueDate, TaskStatus status,
                            Instant createdAt, String definitionCode, String businessObjectType, UUID businessObjectId,
                            String stepType, ApprovalType approvalType, UUID assignedEmployeeId,
                            String assignedEmployeeName, String assignedRole, UUID requesterId, String requesterName,
-                           UUID viaDelegationFrom) {
+                           UUID viaDelegationFrom, @JsonIgnore Text titleText) {
     }
 
     /** Timeline of one workflow run (AGENT.md §88 "workflow timeline"). */

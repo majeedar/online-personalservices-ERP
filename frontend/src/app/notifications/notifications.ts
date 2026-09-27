@@ -31,12 +31,12 @@ import { I18N_PIPES } from '../core/i18n/pipes';
               <mat-icon aria-hidden="true">{{ n.read ? 'notifications_none' : 'notifications_active' }}</mat-icon>
               <div class="body">
                 <button type="button" class="link" (click)="open(n)">
-                  <strong data-i18n-source="server">{{ n.subject }}</strong>
+                  <strong>{{ n.subject }}</strong>
                   @if (!n.read) {
                     <span class="sr-only">{{ '(unread)' | tr }}</span>
                   }
                 </button>
-                <p data-i18n-source="server">{{ n.message }}</p>
+                <p>{{ n.message }}</p>
                 <small class="muted">{{ n.createdAt | ldate: 'medium' }}</small>
               </div>
             </li>

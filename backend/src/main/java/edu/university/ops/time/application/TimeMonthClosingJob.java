@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.batch.BatchJob;
 import edu.university.ops.shared.exception.BusinessException;
 import java.time.Clock;
@@ -29,8 +30,8 @@ class TimeMonthClosingJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Close the previous month's time accounts";
+    public Text description() {
+        return Text.of("Close the previous month's time accounts");
     }
 
     @Override

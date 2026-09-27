@@ -1,5 +1,6 @@
 package edu.university.ops.shared.integration;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.monitoring.CorrelationId;
 import java.time.Clock;
 import java.time.Instant;
@@ -88,9 +89,10 @@ public class OutboxProcessor {
                     event.getAttempts() - 1, event.getId());
             monitor.finishRun(runId, 1, 0, 1);
             if (gaveUp) {
-                monitor.alertAdmins("Integration failure: " + handler.interfaceName(),
-                        "Export " + event.getIdempotencyKey() + " failed " + event.getAttempts()
-                                + " times and needs attention in the Integration Monitor.",
+                monitor.alertAdmins(Text.of("Integration failure: {interface}", "interface",
+                                Text.of(handler.interfaceName())),
+                        Text.of("Export {reference} failed {attempts} times and needs attention in the Integration "
+                                + "Monitor.", "reference", event.getIdempotencyKey(), "attempts", event.getAttempts()),
                         event.getAggregateType(), event.getAggregateId());
             }
             return false;

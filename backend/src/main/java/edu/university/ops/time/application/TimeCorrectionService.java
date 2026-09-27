@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.employee.EmployeeDirectory;
 import edu.university.ops.shared.audit.AuditService;
 import edu.university.ops.shared.configuration.OpsProperties;
@@ -126,7 +127,8 @@ public class TimeCorrectionService {
         // Assigned to the supervisor; any TIME_ADMIN may also decide (AGENT.md §15.5).
         StepSpec step = new StepSpec("TIME_CORRECTION_APPROVAL", ApprovalType.TIME_CORRECTION,
                 approvers.isEmpty() ? null : approvers.getFirst(), Role.TIME_ADMIN,
-                "Approve time correction – " + name, describe(request) + ". Reason: " + request.getReason());
+                Text.of("Approve time correction – {name}", "name", name),
+                Text.of("{change}. Reason: {reason}", "change", describe(request), "reason", request.getReason()));
         request.attachWorkflow(workflow.start("TIME_CORRECTION", BUSINESS_OBJECT_TYPE, request.getId(), employeeId,
                 List.of(step)));
         accounts.recalculateDay(employeeId, input.date());
@@ -185,17 +187,18 @@ public class TimeCorrectionService {
             audit.record("TIME_CORRECTION_APPLIED", BUSINESS_OBJECT_TYPE, request.getId(), before,
                     Map.of("entries", describeEntries(active(request))));
             notifications.notify(request.getEmployeeId(), NotificationType.TIME_CORRECTION_APPROVED,
-                    BUSINESS_OBJECT_TYPE, request.getId(), "Time correction approved",
-                    "Your time correction for " + request.getDate().format(DATE) + " was approved and applied.");
+                    BUSINESS_OBJECT_TYPE, request.getId(), Text.of("Time correction approved"),
+                    Text.of("Your time correction for {date} was approved and applied.", "date", request.getDate()));
         } else {
             request.decide(false, now);
             accounts.recalculateDay(request.getEmployeeId(), request.getDate());
             audit.record("TIME_CORRECTION_REJECTED", BUSINESS_OBJECT_TYPE, request.getId(), null,
                     Map.of("outcome", event.outcome()));
             notifications.notify(request.getEmployeeId(), NotificationType.TIME_CORRECTION_REJECTED,
-                    BUSINESS_OBJECT_TYPE, request.getId(), "Time correction rejected",
-                    "Your time correction for " + request.getDate().format(DATE) + " was not approved."
-                            + (event.comment() == null ? "" : " Reason: " + event.comment()));
+                    BUSINESS_OBJECT_TYPE, request.getId(), Text.of("Time correction rejected"),
+                    Text.of("Your time correction for {date} was not approved.{reason}", "date", request.getDate(),
+                            "reason", event.comment() == null ? Text.of("")
+                                    : Text.of(" Reason: {comment}", "comment", event.comment())));
         }
     }
 
@@ -209,7 +212,7 @@ public class TimeCorrectionService {
         recipients.addAll(delegations.effectiveDelegatesOf(event.assignedEmployeeId(), event.approvalType(),
                 LocalDate.now(clock)));
         recipients.forEach(r -> notifications.notify(r, NotificationType.TIME_CORRECTION_REQUIRED,
-                BUSINESS_OBJECT_TYPE, event.businessObjectId(), "Time correction to approve", event.title()));
+                BUSINESS_OBJECT_TYPE, event.businessObjectId(), Text.of("Time correction to approve"), event.title()));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -217,8 +220,8 @@ public class TimeCorrectionService {
     private void requireOpenMonth(LocalDate date) {
         if (accounts.isClosed(date)) {
             throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED,
-                    "The time accounts for " + YearMonth.from(date)
-                            + " are closed. Ask a time administrator to reopen the month.");
+                    Text.of("The time accounts for {month} are closed. Ask a time administrator to reopen the "
+                            + "month.", "month", YearMonth.from(date).toString()));
         }
     }
 
@@ -265,13 +268,19 @@ public class TimeCorrectionService {
         return instant.atZone(properties.timezone()).format(TIME);
     }
 
-    private String describe(TimeCorrectionRequest r) {
-        String what = switch (r.getOperation()) {
-            case ADD -> "Add " + r.getRequestedType() + " at " + time(r.getRequestedTimestamp());
-            case MODIFY -> "Change entry to " + r.getRequestedType() + " at " + time(r.getRequestedTimestamp());
-            case DELETE -> "Remove an entry";
+    private Text describe(TimeCorrectionRequest r) {
+        return switch (r.getOperation()) {
+            case ADD -> Text.of("Add {type} at {time} on {date}", "type", Text.of(entryLabel(r)), "time",
+                    time(r.getRequestedTimestamp()), "date", r.getDate());
+            case MODIFY -> Text.of("Change entry to {type} at {time} on {date}", "type", Text.of(entryLabel(r)),
+                    "time", time(r.getRequestedTimestamp()), "date", r.getDate());
+            case DELETE -> Text.of("Remove an entry on {date}", "date", r.getDate());
         };
-        return what + " on " + r.getDate().format(DATE);
+    }
+
+    /** "clock out" for CLOCK_OUT; translated as a text of its own. */
+    private static String entryLabel(TimeCorrectionRequest r) {
+        return r.getRequestedType().name().toLowerCase().replace('_', ' ');
     }
 
     private Map<String, Object> snapshot(TimeCorrectionRequest r) {

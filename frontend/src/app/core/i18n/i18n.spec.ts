@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { describeError } from '../api/api-error';
 import { formatDays, halfDaySuffix, humanize } from '../format';
 import de from './de.json';
-import { language, setLanguage, tr } from './i18n';
+import { acceptLanguage, language, setLanguage, tr } from './i18n';
 import { I18N_PIPES } from './pipes';
 
 @Component({
@@ -37,24 +37,27 @@ describe('i18n', () => {
     expect(halfDaySuffix('MORNING')).toBe(' (vormittags)');
   });
 
-  it('translates known error codes and keeps server details otherwise', () => {
+  it('shows server messages as sent (the API answers in the chosen language) with a translated reference', () => {
     setLanguage('de');
     const overlap = new HttpErrorResponse({
       status: 409,
       error: {
         code: 'ABSENCE_OVERLAP',
-        message: 'The requested absence overlaps.',
+        message: 'Die beantragte Abwesenheit überschneidet sich mit einem bestehenden Antrag.',
         correlationId: 'abc',
       },
     });
     expect(describeError(overlap)).toBe(
-      'Der Zeitraum überschneidet sich mit einem bestehenden Antrag. (Ref.: abc)',
+      'Die beantragte Abwesenheit überschneidet sich mit einem bestehenden Antrag. (Ref.: abc)',
     );
-    const validation = new HttpErrorResponse({
-      status: 400,
-      error: { code: 'VALIDATION_FAILED', message: 'Please give a reason when rejecting.' },
-    });
-    expect(describeError(validation)).toBe('Please give a reason when rejecting.');
+    expect(describeError(new HttpErrorResponse({ status: 0 }))).toContain('Server ist nicht erreichbar');
+  });
+
+  it('sends the interface language to the API', () => {
+    setLanguage('de');
+    expect(acceptLanguage()).toBe('de');
+    setLanguage('pseudo');
+    expect(acceptLanguage()).toBe('qps-ploc');
   });
 
   it('re-renders templates when the language changes', async () => {

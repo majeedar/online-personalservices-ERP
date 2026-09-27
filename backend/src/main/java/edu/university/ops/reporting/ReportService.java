@@ -1,5 +1,6 @@
 package edu.university.ops.reporting;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.AbsenceReports;
 import edu.university.ops.absence.AbsenceReports.LeaveUsage;
 import edu.university.ops.employee.EmployeeDirectory;
@@ -36,7 +37,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReportService {
 
-    public record Report(String title, List<String> columns, List<List<Object>> rows) {
+    /** Title, columns and {@link Text} cells are rendered in the reader's language by the controller. */
+    public record Report(Text title, List<Text> columns, List<List<Object>> rows) {
+    }
+
+    private static List<Text> columns(String... names) {
+        return java.util.Arrays.stream(names).map(Text::of).toList();
     }
 
     private final AbsenceReports absences;
@@ -90,21 +96,23 @@ public class ReportService {
         totals.forEach((unit, t) -> rows.add(List.of(unit, headcount.get(unit), t[0], t[1], t[2], t[3],
                 t[0].signum() == 0 ? BigDecimal.ZERO
                         : t[1].multiply(BigDecimal.valueOf(100)).divide(t[0], 1, java.math.RoundingMode.HALF_UP))));
-        return new Report("Leave usage by organisational unit " + year,
-                List.of("Unit", "Employees", "Entitled days", "Used", "Reserved", "Remaining", "Used %"), rows);
+        return new Report(Text.of("Leave usage by organisational unit {year}", "year", year),
+                columns("Unit", "Employees", "Entitled days", "Used", "Reserved", "Remaining", "Used %"), rows);
     }
 
     public Report pendingApprovals() {
         Instant now = Instant.now(clock);
         List<List<Object>> rows = workflow.allOpenTasks().stream()
                 .sorted(Comparator.comparing(t -> t.createdAt()))
-                .map(t -> List.<Object>of(t.title(), t.stepType(),
-                        t.assignedEmployeeName() != null ? t.assignedEmployeeName() : "Role " + t.assignedRole(),
+                .map(t -> List.<Object>of(t.titleText(), Text.of(t.stepType()),
+                        t.assignedEmployeeName() != null ? t.assignedEmployeeName()
+                                : Text.of("Role {role}", "role", Text.of(t.assignedRole())),
                         t.createdAt().atZone(clock.getZone()).toLocalDate(),
                         Duration.between(t.createdAt(), now).toDays(),
-                        t.dueDate() != null && t.dueDate().isBefore(LocalDate.now(clock)) ? "overdue" : "on time"))
+                        Text.of(t.dueDate() != null && t.dueDate().isBefore(LocalDate.now(clock)) ? "overdue"
+                                : "on time")))
                 .toList();
-        return new Report("Pending approvals", List.of("Task", "Step", "Assigned to", "Since", "Days open",
+        return new Report(Text.of("Pending approvals"), columns("Task", "Step", "Assigned to", "Since", "Days open",
                 "Due"), rows);
     }
 
@@ -112,9 +120,10 @@ public class ReportService {
         Map<String, List<TravelSummary>> byStatus = travel.allTrips().stream()
                 .collect(Collectors.groupingBy(TravelSummary::status, TreeMap::new, Collectors.toList()));
         List<List<Object>> rows = new ArrayList<>();
-        byStatus.forEach((status, trips) -> rows.add(List.of(status, trips.size(),
+        byStatus.forEach((status, trips) -> rows.add(List.of(Text.of(status), trips.size(),
                 trips.stream().map(TravelSummary::estimatedCost).reduce(BigDecimal.ZERO, BigDecimal::add))));
-        return new Report("Travel requests by status", List.of("Status", "Trips", "Estimated cost (EUR)"), rows);
+        return new Report(Text.of("Travel requests by status"), columns("Status", "Trips", "Estimated cost (EUR)"),
+                rows);
     }
 
     public Report travelEstimatedVsActual() {
@@ -127,7 +136,7 @@ public class ReportService {
                         t.start().atZone(clock.getZone()).toLocalDate(), t.costCentre(), t.estimatedCost(),
                         t.settledAmount(), t.settledAmount().subtract(t.estimatedCost()), t.currency()))
                 .toList();
-        return new Report("Travel: estimated vs actual cost", List.of("Traveller", "Destination", "Start",
+        return new Report(Text.of("Travel: estimated vs actual cost"), columns("Traveller", "Destination", "Start",
                 "Cost centre", "Estimated", "Actual", "Difference", "Currency"), rows);
     }
 
@@ -143,7 +152,8 @@ public class ReportService {
                             hours(s.workedMinutes()), hours(s.absenceMinutes()), hours(s.balanceMinutes()),
                             s.incompleteDays());
                 }).toList();
-        return new Report("Monthly working-time overview " + month, List.of("Personnel no.", "Name", "Unit",
+        return new Report(Text.of("Monthly working-time overview {month}", "month", month.toString()),
+                columns("Personnel no.", "Name", "Unit",
                 "Target h", "Worked h", "Absence h", "Balance h", "Incomplete days"), rows);
     }
 
@@ -154,7 +164,7 @@ public class ReportService {
                         e.getErrorCode(), nullToDash(e.getExternalReference()), e.getErrorMessage(),
                         e.getRetryCount()))
                 .toList();
-        return new Report("Unresolved integration errors", List.of("Time", "Code", "Reference", "Message",
+        return new Report(Text.of("Unresolved integration errors"), columns("Time", "Code", "Reference", "Message",
                 "Retries"), rows);
     }
 
@@ -162,23 +172,23 @@ public class ReportService {
         List<List<Object>> rows = batch.history(null, PageRequest.of(0, 500)).getContent().stream()
                 .filter(r -> r.getStatus() == BatchJobRun.Status.FAILED || r.getStatus() == BatchJobRun.Status.PARTIAL)
                 .map(r -> List.<Object>of(r.getStartedAt().atZone(clock.getZone()).toLocalDateTime().withNano(0),
-                        r.getJobName(), r.getStatus(), r.getProcessedRecords(), r.getFailedRecords(),
+                        r.getJobName(), Text.of(r.getStatus().name()), r.getProcessedRecords(), r.getFailedRecords(),
                         nullToDash(r.getStartedBy())))
                 .toList();
-        return new Report("Failed and partial batch runs", List.of("Started", "Job", "Status", "Processed",
+        return new Report(Text.of("Failed and partial batch runs"), columns("Started", "Job", "Status", "Processed",
                 "Failed", "Started by"), rows);
     }
 
     /** Available reports and who may see them (least privilege, AGENT.md §82). */
-    public static Map<String, String> catalogue() {
-        Map<String, String> m = new LinkedHashMap<>();
-        m.put("leave-usage", "Leave usage by organisational unit");
-        m.put("pending-approvals", "Pending approvals");
-        m.put("travel-by-status", "Travel requests by status");
-        m.put("travel-costs", "Travel: estimated vs actual cost");
-        m.put("working-time", "Monthly working-time overview");
-        m.put("failed-integrations", "Unresolved integration errors");
-        m.put("failed-batch-jobs", "Failed batch jobs");
+    public static Map<String, Text> catalogue() {
+        Map<String, Text> m = new LinkedHashMap<>();
+        m.put("leave-usage", Text.of("Leave usage by organisational unit"));
+        m.put("pending-approvals", Text.of("Pending approvals"));
+        m.put("travel-by-status", Text.of("Travel requests by status"));
+        m.put("travel-costs", Text.of("Travel: estimated vs actual cost"));
+        m.put("working-time", Text.of("Monthly working-time overview"));
+        m.put("failed-integrations", Text.of("Unresolved integration errors"));
+        m.put("failed-batch-jobs", Text.of("Failed batch jobs"));
         return m;
     }
 

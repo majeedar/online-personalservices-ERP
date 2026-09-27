@@ -29,7 +29,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
     @if (request(); as r) {
       <header class="page-header">
         <div>
-          <h1><span data-i18n-source="master-data">{{ r.leaveType.name }}</span> · {{ r.startDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}@if (r.endDate !== r.startDate) { – {{ r.endDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}}</h1>
+          <h1>{{ r.leaveType.name }} · {{ r.startDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.startDayPart) }}@if (r.endDate !== r.startDate) { – {{ r.endDate | ldate: 'mediumDate' }}{{ halfDaySuffix(r.endDayPart) }}}</h1>
           <p>{{ r.employee.displayName }} · <ops-status [status]="r.status" /></p>
         </div>
         <div class="actions">

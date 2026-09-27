@@ -1,5 +1,7 @@
 package edu.university.ops.shared.notification;
 
+import edu.university.ops.shared.i18n.Text;
+import edu.university.ops.shared.i18n.Translator;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -7,6 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Map;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 
 /**
  * One notification. The row is the in-app channel; {@code status} tracks the
@@ -31,6 +37,12 @@ public class Notification {
     private String subject;
     private String message;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> subjectText;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> messageText;
+
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status;
 
@@ -42,14 +54,16 @@ public class Notification {
     }
 
     Notification(UUID recipientEmployeeId, NotificationType type, String businessObjectType, UUID businessObjectId,
-                 String subject, String message, Instant now) {
+                 Text subject, Text message, Instant now) {
         this.id = UUID.randomUUID();
         this.recipientEmployeeId = recipientEmployeeId;
         this.type = type;
         this.businessObjectType = businessObjectType;
         this.businessObjectId = businessObjectId;
-        this.subject = subject;
-        this.message = message;
+        this.subject = subject.english();
+        this.message = message.english();
+        this.subjectText = Translator.toMap(subject);
+        this.messageText = Translator.toMap(message);
         this.status = DeliveryStatus.PENDING;
         this.createdAt = now;
     }
@@ -93,12 +107,23 @@ public class Notification {
         return businessObjectId;
     }
 
+    /** English subject (fallback, logs). */
     public String getSubject() {
         return subject;
     }
 
+    /** English message (fallback, logs). */
     public String getMessage() {
         return message;
+    }
+
+    /** Subject to render in the reader's language. */
+    public Text subjectText() {
+        return Translator.stored(subjectText, subject);
+    }
+
+    public Text messageText() {
+        return Translator.stored(messageText, message);
     }
 
     public DeliveryStatus getStatus() {

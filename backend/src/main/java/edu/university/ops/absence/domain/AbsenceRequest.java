@@ -1,5 +1,6 @@
 package edu.university.ops.absence.domain;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
 import jakarta.persistence.CascadeType;
@@ -176,7 +177,8 @@ public class AbsenceRequest {
     private void transition(AbsenceStatus target, Instant now) {
         if (!status.canTransitionTo(target)) {
             throw new BusinessException(ErrorCode.INVALID_WORKFLOW_STATE,
-                    "A request in status " + status + " cannot become " + target + ".");
+                    Text.of("A request in status {status} cannot become {target}.", "status", Text.of(status.name()),
+                            "target", Text.of(target.name())));
         }
         this.status = target;
         this.updatedAt = now;

@@ -1,6 +1,8 @@
 package edu.university.ops.shared.workflow;
 
 import edu.university.ops.shared.workflow.WorkflowEnums.StepStatus;
+import edu.university.ops.shared.i18n.Text;
+import edu.university.ops.shared.i18n.Translator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,6 +18,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 
 /** One approval step. Assigned to a person, to a role, or to both (person first). */
 @Entity
@@ -40,6 +46,12 @@ public class WorkflowStep {
     private String taskTitle;
     private String taskDescription;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> taskTitleText;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> taskDescriptionText;
+
     @Enumerated(EnumType.STRING)
     private StepStatus status;
 
@@ -62,8 +74,10 @@ public class WorkflowStep {
         this.approvalType = spec.approvalType();
         this.assignedEmployeeId = spec.assignedEmployeeId();
         this.assignedRole = spec.assignedRole() == null ? null : spec.assignedRole().name();
-        this.taskTitle = spec.taskTitle();
-        this.taskDescription = spec.taskDescription();
+        this.taskTitle = spec.taskTitle().english();
+        this.taskDescription = spec.taskDescription() == null ? null : spec.taskDescription().english();
+        this.taskTitleText = Translator.toMap(spec.taskTitle());
+        this.taskDescriptionText = Translator.toMapOrNull(spec.taskDescription());
         this.status = StepStatus.PENDING;
     }
 
@@ -123,12 +137,13 @@ public class WorkflowStep {
         return assignedRole;
     }
 
-    public String getTaskTitle() {
-        return taskTitle;
+    public Text getTaskTitle() {
+        return Translator.stored(taskTitleText, taskTitle);
     }
 
-    public String getTaskDescription() {
-        return taskDescription;
+    /** May be null. */
+    public Text getTaskDescription() {
+        return Translator.stored(taskDescriptionText, taskDescription);
     }
 
     public StepStatus getStatus() {

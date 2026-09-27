@@ -1,5 +1,6 @@
 package edu.university.ops.shared.workflow;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.batch.BatchJob;
 import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.notification.NotificationService;
@@ -42,8 +43,8 @@ class WorkflowReminderJob implements BatchJob {
     }
 
     @Override
-    public String description() {
-        return "Remind approvers of overdue approval tasks";
+    public Text description() {
+        return Text.of("Remind approvers of overdue approval tasks");
     }
 
     @Override
@@ -70,8 +71,8 @@ class WorkflowReminderJob implements BatchJob {
                     continue;
                 }
                 notifications.notify(recipient, NotificationType.TASK_REMINDER, "UserTask", task.id(),
-                        "Reminder: approval pending", task.title() + " is waiting since "
-                                + task.createdAt().atZone(clock.getZone()).toLocalDate() + ".");
+                        Text.of("Reminder: approval pending"), Text.of("{task} is waiting since {date}.", "task",
+                                task.titleText(), "date", task.createdAt().atZone(clock.getZone()).toLocalDate()));
             }
             context.success();
         }

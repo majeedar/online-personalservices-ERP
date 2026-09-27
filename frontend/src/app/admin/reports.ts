@@ -29,7 +29,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
       <mat-card appearance="outlined">
         <mat-nav-list [attr.aria-label]="'Reports' | tr">
           @for (r of available(); track r.id) {
-            <a mat-list-item href="#" (click)="$event.preventDefault(); select(r)" [activated]="selected()?.id === r.id" data-i18n-source="server">{{ r.title }}</a>
+            <a mat-list-item href="#" (click)="$event.preventDefault(); select(r)" [activated]="selected()?.id === r.id">{{ r.title }}</a>
           } @empty {
             <p class="muted pad">{{ 'No reports available for your roles.' | tr }}</p>
           }
@@ -50,7 +50,7 @@ import { I18N_PIPES } from '../core/i18n/pipes';
             </div>
             @if (report(); as rep) {
               <div class="table-scroll">
-                <table class="data" data-i18n-source="server">
+                <table class="data">
                   <caption>{{ rep.title }}</caption>
                   <thead><tr>@for (c of rep.columns; track c) {<th scope="col">{{ c }}</th>}</tr></thead>
                   <tbody>

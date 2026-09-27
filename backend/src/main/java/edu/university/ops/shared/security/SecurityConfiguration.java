@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.university.ops.shared.exception.ErrorCode;
 import edu.university.ops.shared.exception.ErrorResponse;
 import edu.university.ops.shared.monitoring.CorrelationId;
+import edu.university.ops.shared.i18n.Text;
+import edu.university.ops.shared.i18n.Translator;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.context.annotation.Bean;
@@ -59,14 +62,14 @@ public class SecurityConfiguration {
                 .logout(l -> l.disable())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) ->
-                                write(res, objectMapper, ErrorCode.NOT_AUTHENTICATED, "Please log in."))
+                                write(req, res, objectMapper, ErrorCode.NOT_AUTHENTICATED, Text.of("Please log in.")))
                         .accessDeniedHandler((req, res, e) -> {
                             if (e instanceof CsrfException) {
-                                write(res, objectMapper, ErrorCode.CSRF_TOKEN_INVALID,
-                                        "Your session token is missing or expired. Reload the page.");
+                                write(req, res, objectMapper, ErrorCode.CSRF_TOKEN_INVALID,
+                                        Text.of("Your session token is missing or expired. Reload the page."));
                             } else {
-                                write(res, objectMapper, ErrorCode.NOT_AUTHORIZED,
-                                        "You are not authorized to perform this action.");
+                                write(req, res, objectMapper, ErrorCode.NOT_AUTHORIZED,
+                                        Text.of("You are not authorized to perform this action."));
                             }
                         }));
         return http.build();
@@ -94,10 +97,12 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    private static void write(HttpServletResponse res, ObjectMapper mapper, ErrorCode code, String message)
-            throws IOException {
+    /** Runs before Spring MVC sets the request locale, so the language is taken from the request. */
+    private static void write(HttpServletRequest req, HttpServletResponse res, ObjectMapper mapper, ErrorCode code,
+                              Text message) throws IOException {
         res.setStatus(code.status().value());
         res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        mapper.writeValue(res.getOutputStream(), ErrorResponse.of(code, message, CorrelationId.current()));
+        mapper.writeValue(res.getOutputStream(), ErrorResponse.of(code,
+                message.render(Translator.forAcceptLanguage(req.getHeader("Accept-Language"))), CorrelationId.current()));
     }
 }

@@ -16,6 +16,8 @@ export interface Session {
   username: string;
   displayName: string;
   roles: Role[];
+  /** Language saved in the profile; absent until the employee chooses one. */
+  language?: 'en' | 'de' | null;
 }
 
 /** Uniform error body returned by every endpoint (AGENT.md §33). */

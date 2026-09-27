@@ -1,5 +1,6 @@
 package edu.university.ops.absence.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.absence.domain.AbsenceRepositories.AbsenceRequestRepository;
 import edu.university.ops.shared.notification.NotificationService;
 import edu.university.ops.shared.notification.NotificationType;
@@ -62,6 +63,6 @@ class AbsenceWorkflowHandler {
         recipients.addAll(delegations.effectiveDelegatesOf(event.assignedEmployeeId(), event.approvalType(),
                 LocalDate.now(clock)));
         recipients.forEach(r -> notifications.notify(r, NotificationType.ABSENCE_APPROVAL_REQUIRED,
-                AbsenceService.BUSINESS_OBJECT_TYPE, event.businessObjectId(), "Approval required", event.title()));
+                AbsenceService.BUSINESS_OBJECT_TYPE, event.businessObjectId(), Text.of("Approval required"), event.title()));
     }
 }

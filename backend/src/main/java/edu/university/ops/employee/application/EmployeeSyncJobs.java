@@ -1,5 +1,6 @@
 package edu.university.ops.employee.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.employee.application.EmployeeSyncService.Outcome;
 import edu.university.ops.employee.application.PersonnelEmployeeMapper.EmployeeImportData;
 import edu.university.ops.employee.domain.EmployeeMasterDataGateway;
@@ -27,25 +28,25 @@ class EmployeeSyncJobs {
     @Bean
     BatchJob employeeSyncJob(EmployeeMasterDataGateway gateway, PersonnelEmployeeMapper mapper,
                              EmployeeSyncService sync, IntegrationMonitor monitor) {
-        return new SyncJob("employee-sync", "Synchronise employees and employments from the personnel ERP",
+        return new SyncJob("employee-sync", Text.of("Synchronise employees and employments from the personnel ERP"),
                 "0 0 2 * * *", "PERSONNEL_EMPLOYEE_SYNC", gateway, mapper, monitor, sync::applyMasterData);
     }
 
     @Bean
     BatchJob supervisorSyncJob(EmployeeMasterDataGateway gateway, PersonnelEmployeeMapper mapper,
                                EmployeeSyncService sync, IntegrationMonitor monitor) {
-        return new SyncJob("supervisor-sync", "Synchronise supervisor / approver relationships", "0 15 2 * * *",
+        return new SyncJob("supervisor-sync", Text.of("Synchronise supervisor / approver relationships"), "0 15 2 * * *",
                 "PERSONNEL_SUPERVISOR_SYNC", gateway, mapper, monitor, sync::applySupervisor);
     }
 
     @Bean
     BatchJob workScheduleSyncJob(EmployeeMasterDataGateway gateway, PersonnelEmployeeMapper mapper,
                                  EmployeeSyncService sync, IntegrationMonitor monitor) {
-        return new SyncJob("work-schedule-sync", "Refresh (part-time) work schedules from the personnel ERP",
+        return new SyncJob("work-schedule-sync", Text.of("Refresh (part-time) work schedules from the personnel ERP"),
                 "0 30 2 * * *", "PERSONNEL_WORK_SCHEDULE_SYNC", gateway, mapper, monitor, sync::applyWorkSchedule);
     }
 
-    private record SyncJob(String name, String description, String defaultCron, String interfaceName,
+    private record SyncJob(String name, Text description, String defaultCron, String interfaceName,
                            EmployeeMasterDataGateway gateway, PersonnelEmployeeMapper mapper,
                            IntegrationMonitor monitor, Function<EmployeeImportData, Outcome> apply)
             implements BatchJob {

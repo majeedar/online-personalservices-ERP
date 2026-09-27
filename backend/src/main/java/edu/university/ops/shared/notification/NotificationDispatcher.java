@@ -4,7 +4,9 @@ import edu.university.ops.shared.directory.PersonDirectory;
 import edu.university.ops.shared.monitoring.CorrelationId;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
+import edu.university.ops.shared.i18n.Translator;
 import java.time.Instant;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -56,8 +58,9 @@ class NotificationDispatcher {
             return;
         }
         try {
+            Locale language = Translator.forLanguageCode(person.get().language());
             channel.send(new NotificationGateway.NotificationMessage(person.get().email(), person.get().displayName(),
-                    n.getSubject(), n.getMessage()));
+                    n.subjectText().render(language), n.messageText().render(language)));
             n.markSent(Instant.now(clock));
             count("sent");
         } catch (RuntimeException e) {

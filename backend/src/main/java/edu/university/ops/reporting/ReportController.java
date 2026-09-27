@@ -1,5 +1,6 @@
 package edu.university.ops.reporting;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.reporting.ReportService.Report;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
@@ -60,7 +61,7 @@ class ReportController {
         OpsPrincipal me = CurrentUser.require();
         return ReportService.catalogue().entrySet().stream()
                 .filter(e -> ACCESS.get(e.getKey()).stream().anyMatch(me::hasRole))
-                .map(e -> new ReportInfo(e.getKey(), e.getValue())).toList();
+                .map(e -> new ReportInfo(e.getKey(), e.getValue().render())).toList();
     }
 
     @GetMapping("/{id}")
@@ -71,7 +72,7 @@ class ReportController {
         OpsPrincipal me = CurrentUser.require();
         Set<Role> allowed = ACCESS.get(id);
         if (allowed == null) {
-            throw BusinessException.notFound(ErrorCode.RESOURCE_NOT_FOUND, "Report " + id);
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Text.of("Report {id} was not found.", "id", id));
         }
         if (allowed.stream().noneMatch(me::hasRole)) {
             throw BusinessException.forbidden();
@@ -86,20 +87,30 @@ class ReportController {
                     : YearMonth.from(today));
             case "failed-integrations" -> reports.failedIntegrations();
             case "failed-batch-jobs" -> reports.failedBatchJobs();
-            default -> throw BusinessException.notFound(ErrorCode.RESOURCE_NOT_FOUND, "Report " + id);
+            default -> throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Text.of("Report {id} was not found.", "id", id));
         };
         if ("csv".equalsIgnoreCase(format)) {
             return ResponseEntity.ok()
                     .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             ContentDisposition.attachment().filename(id + ".csv").build().toString())
-                    .body(toCsv(report));
+                    .body(toCsv(rendered(report)));
         }
-        return ResponseEntity.ok(report);
+        return ResponseEntity.ok(rendered(report));
+    }
+
+    /** A report as sent: title, columns and text cells in the reader's language (ADR-020). */
+    record RenderedReport(String title, List<String> columns, List<List<Object>> rows) {
+    }
+
+    static RenderedReport rendered(Report report) {
+        return new RenderedReport(report.title().render(), report.columns().stream().map(Text::render).toList(),
+                report.rows().stream().map(row -> row.stream()
+                        .map(cell -> cell instanceof Text t ? (Object) t.render() : cell).toList()).toList());
     }
 
     /** RFC 4180 CSV with a BOM so spreadsheet tools detect UTF-8; formula injection is neutralised. */
-    static String toCsv(Report report) {
+    static String toCsv(RenderedReport report) {
         StringBuilder sb = new StringBuilder("﻿");
         sb.append(report.columns().stream().map(ReportController::cell).collect(Collectors.joining(","))).append("\r\n");
         for (List<Object> row : report.rows()) {

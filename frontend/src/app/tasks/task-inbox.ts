@@ -48,8 +48,8 @@ import { I18N_PIPES } from '../core/i18n/pipes';
             @for (t of tasks(); track t.id) {
               <tr>
                 <td>
-                  <a [routerLink]="link(t)" data-i18n-source="server">{{ t.title }}</a>
-                  <div class="muted small" data-i18n-source="server">{{ t.description }}</div>
+                  <a [routerLink]="link(t)">{{ t.title }}</a>
+                  <div class="muted small">{{ t.description }}</div>
                   @if (t.viaDelegationFrom) {
                     <div class="small"><mat-icon class="inline" aria-hidden="true">swap_horiz</mat-icon> {{ 'Delegated to you by {name}' | tr: { name: t.assignedEmployeeName } }}</div>
                   } @else if (!t.assignedEmployeeId) {

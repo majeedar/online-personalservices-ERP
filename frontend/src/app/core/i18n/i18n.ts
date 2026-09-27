@@ -144,3 +144,17 @@ if (typeof document !== 'undefined') {
 export function marker<T extends string>(text: T): T {
   return text;
 }
+
+/** Accept-Language for API calls, so server texts come in the same language (ADR-020). */
+export function acceptLanguage(): string {
+  return current() === 'pseudo' ? 'qps-ploc' : current();
+}
+
+/** True if a language was chosen in this browser (it then wins over the profile's). */
+export function hasStoredChoice(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}

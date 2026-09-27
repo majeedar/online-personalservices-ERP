@@ -4,6 +4,7 @@ import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angula
 
 import { routes } from './app.routes';
 import { sessionExpiryInterceptor } from './core/auth/session-expiry.interceptor';
+import { languageInterceptor } from './core/i18n/language.interceptor';
 import { I18nTitleStrategy } from './core/i18n/title-strategy';
 
 export const appConfig: ApplicationConfig = {
@@ -15,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     // in the X-XSRF-TOKEN header on mutating same-origin requests.
     provideHttpClient(
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
-      withInterceptors([sessionExpiryInterceptor]),
+      withInterceptors([languageInterceptor, sessionExpiryInterceptor]),
     ),
   ],
 };

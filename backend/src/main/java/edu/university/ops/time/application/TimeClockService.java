@@ -1,5 +1,6 @@
 package edu.university.ops.time.application;
 
+import edu.university.ops.shared.i18n.Text;
 import edu.university.ops.shared.configuration.OpsProperties;
 import edu.university.ops.shared.exception.BusinessException;
 import edu.university.ops.shared.exception.ErrorCode;
@@ -62,7 +63,7 @@ public class TimeClockService {
         LocalDate date = businessDateFor(employeeId, at);
         if (accounts.isClosed(date)) {
             throw new BusinessException(ErrorCode.TIME_MONTH_CLOSED,
-                    "The time accounts for " + YearMonth.from(date) + " are closed.");
+                    Text.of("The time accounts for {month} are closed.", "month", YearMonth.from(date).toString()));
         }
         List<TimeEntry> day = activeEntries(employeeId, date);
         State state = TimeSequence.stateAfter(events(day));

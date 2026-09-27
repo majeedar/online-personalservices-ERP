@@ -32,7 +32,7 @@ class NotificationController {
                                 String subject, String message, Instant createdAt, boolean read) {
         static NotificationResponse of(Notification n) {
             return new NotificationResponse(n.getId(), n.getType(), n.getBusinessObjectType(), n.getBusinessObjectId(),
-                    n.getSubject(), n.getMessage(), n.getCreatedAt(), n.getReadAt() != null);
+                    n.subjectText().render(), n.messageText().render(), n.getCreatedAt(), n.getReadAt() != null);
         }
     }
 
