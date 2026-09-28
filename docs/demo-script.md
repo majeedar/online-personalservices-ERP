@@ -24,6 +24,7 @@ Log in as **`employee`** (Erika Mustermann).
    - The right-hand panel calculates the working days (the holiday does not count), the current balance and the projected balance.
    - Add a representative (type "Clara") and **Save and submit**. The status is **In approval**.
 2. *Optional, for the part-time rule (Scenario 2):* log in as **`parttime`** and preview Thursday → Monday. Only Thursday and Monday count, because Friday is not in her schedule.
+   - *Optional, half days:* pick a single day and choose **Morning (half day)**. The preview counts 0.5 days and half the planned time.
 3. Log out and log in as **`supervisor`** (Stefan Beispiel).
    - **My Tasks** shows *Approve annual leave – Erika Mustermann*.
    - Open it. The detail page shows the calculated days and the workflow timeline.
@@ -81,6 +82,7 @@ Log in as **`erpadmin`**.
    - Alternative: `docker compose stop mock-erp`, then `docker compose start mock-erp`.
 4. **Audit:** filter by entity type `AbsenceRequest`. You see submission and approval with actor, time and correlation ID. The audit log cannot be edited, which the database enforces.
 5. *Optional:* **Reports** as `hradmin` (leave usage by unit, monthly working time, CSV download). Swagger UI is at http://localhost:4200/swagger-ui.html.
+6. *Optional, languages:* choose **EN → Deutsch** in the top bar. The page reloads in German, including notifications, task titles, report columns and error messages from the server.
 
 ---
 

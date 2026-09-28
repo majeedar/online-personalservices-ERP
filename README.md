@@ -36,7 +36,7 @@ This prototype does not represent the implementation of any real university. All
   - exports to the travel ERP and finance.
 - **External systems:** personnel, finance and travel ERP are mocked by the separate `mock-erp` service.
 - **Frontend:** the Angular 21 SPA is served by nginx, which also proxies the API, so the app runs on one origin with a session cookie and CSRF protection.
-- **Languages:** English and German. The menu in the toolbar (and on the login page) switches without a reload; the choice is kept in the browser, and the default follows the browser language.
+- **Languages:** English and German, for the interface and for texts from the server (notifications, tasks, errors, reports). The menu in the toolbar (and on the login page) switches without a reload. The choice is kept in the browser and saved to the profile, which also sets the e-mail language. Without a choice, the profile language applies, then the browser language (ADR-019, ADR-020).
 
 ```text
 Browser ─► nginx (Angular SPA, /api proxy) ─► backend (Spring Boot) ─► PostgreSQL
@@ -52,12 +52,13 @@ All phases of [AGENT.md §73](AGENT.md) are implemented:
 |---|---|
 | 1 Foundation | Repository, Docker, PostgreSQL + Flyway, demo login (mock SSO), error handling, correlation IDs |
 | 2 Master data | Employees, employments, organisation, roles, approval relations, work schedules, seed data |
-| 3 Absence | Leave types, entitlement ledger, work-schedule-aware day calculation, workflow, delegation, notifications, cancellation, attachments, team calendar |
+| 3 Absence | Leave types, entitlement ledger, work-schedule-aware day calculation, half days, workflow, delegation, notifications, cancellation, attachments, team calendar |
 | 4 Time | Clock in/out and breaks, daily accounts (statutory breaks, absence credit), monthly overview, corrections with approval, monthly closing |
 | 5 Travel | Requests, split funding, supervisor + financial approval, expenses with receipts, travel-office review, settlement |
 | 6 Integration | Ports + stub/HTTP adapters, mock-erp, mapping and validation, cost-centre check, travel export, finance posting, outbox, idempotency |
 | 7 Batch & operations | 10 scheduled jobs, data retention, batch/integration history, retries, alerts, admin UI, system health, metrics, reports with CSV |
 | 8 Quality | Architecture, unit, integration, frontend and end-to-end tests; documentation; demo script |
+| Beyond §73 | German/English interface and server texts, with a translation check in CI and a browser sweep for untranslated text (AGENT.md §93) |
 
 ## Prerequisites
 
@@ -128,7 +129,8 @@ See [docs/demo-script.md](docs/demo-script.md) for the full 10–15 minute walkt
 - time recording;
 - time correction;
 - integration failure and retry;
-- batch synchronisation.
+- batch synchronisation;
+- half-day leave and the German interface (optional steps).
 
 | | |
 |---|---|
@@ -159,7 +161,8 @@ Settings are externalised in [application.yml](backend/src/main/resources/applic
 - statutory breaks;
 - travel currencies, financial-approval threshold and receipt rules;
 - integration mode, URLs, timeouts, retries and outbox attempts;
-- batch schedules;
+- batch schedules, and whether this server runs them (`OPS_BATCH_ENABLED`);
+- retention periods;
 - mail.
 
 Secrets come from the environment ([.env.example](.env.example)); none are committed.

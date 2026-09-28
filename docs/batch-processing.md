@@ -35,7 +35,7 @@ Each record is processed in its own transaction, so one bad record never rolls b
 ```yaml
 ops:
   batch:
-    enabled: true            # false: no timers (tests), manual starts still possible
+    enabled: true            # false: no timers on this server (tests, or all but one node of a cluster); manual starts still possible
     schedules:
       employee-sync: "0 0 2 * * *"
       workflow-reminder: "-"   # "-" disables the timer for a job

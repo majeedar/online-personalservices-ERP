@@ -3330,7 +3330,7 @@ At every stage, keep the application runnable.
 - ADR-016 Monthly closing freezes a month's time accounts; corrections are rejected until it is reopened (reason required, audited).
 - ADR-017 Data retention anonymises instead of deleting: after a configurable period, finished requests lose free text, representatives, decision comments and attachments; status, dates, amounts and the audit trail stay.
 - ADR-018 Half days: the first and last day of an absence may cover only the afternoon or morning; a half working day deducts 0.5 days and credits half the planned time, and a morning and an afternoon absence may share a date.
-- ADR-019 German/English interface: a runtime switch in the SPA (signal-based `tr` pipe, English source texts as keys and fallback, `de.json` dictionary checked in CI); dates, numbers and currencies follow the language; server texts stay English except translated error codes.
+- ADR-019 German/English interface: a runtime switch in the SPA (signal-based `tr` pipe, English source texts as keys and fallback, `de.json` dictionary checked in CI); dates, numbers and currencies follow the language; server texts are translated by the backend (ADR-020).
 - ADR-020 Server texts in the reader's language: English templates with named values (`Text`) are the keys of a backend German dictionary; notifications and tasks store the template and are rendered per request (Accept-Language) or, for e-mail, in the employee's saved language; a test fails on any server text without German.
 
 ---
